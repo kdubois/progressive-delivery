@@ -6,7 +6,7 @@ metadata:
 spec:
   replicas: 10
   revisionHistoryLimit: 1
-  minReadySeconds: 5docs
+  minReadySeconds: 5
   selector:
     matchLabels:
       app: rollouts-demo
