@@ -17,6 +17,7 @@ spec:
       enabled: true
     prometheus:
       enabled: true
+  mode: ClusterWide
   policy:
     type: Istiod
   profiles:
@@ -26,4 +27,4 @@ spec:
   tracing:
     sampling: 10000
     type: Jaeger
-  version: v2.2
+  version: v2.4
