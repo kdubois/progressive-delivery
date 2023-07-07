@@ -11,8 +11,8 @@ resources:
 - isto-prom-rbac.yaml
 - jaeger-product.yaml
 - kiali-ossm.yaml
-- openshift-distributed-tracing-ns.yaml
-- openshift-distributed-tracing.yaml
+#- openshift-distributed-tracing-ns.yaml
+#- openshift-distributed-tracing.yaml
 - openshift-operators-redhat-ns.yaml
 - openshift-operators-redhat.yaml
 # - servicemeshmemberroll-default.yaml
