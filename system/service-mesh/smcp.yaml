@@ -1,11 +1,14 @@
 apiVersion: maistra.io/v2
 kind: ServiceMeshControlPlane
 metadata:
-  annotations:
-    argocd.argoproj.io/sync-wave: "31"
   name: smcp
   namespace: istio-system
 spec:
+  tracing:
+    type: Jaeger
+    sampling: 10000
+  policy:
+    type: Istiod
   addons:
     grafana:
       enabled: true
@@ -17,13 +20,7 @@ spec:
       enabled: true
     prometheus:
       enabled: true
-  mode: ClusterWide
-  policy:
-    type: Istiod
-  profiles:
-    - default
   telemetry:
     type: Istiod
-  tracing:
-    sampling: 10000
-    type: Jaeger
+  version: v2.4
+  mode: ClusterWide
