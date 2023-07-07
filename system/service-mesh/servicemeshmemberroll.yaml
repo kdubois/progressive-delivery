@@ -4,6 +4,6 @@ metadata:
   name: default
   namespace: istio-system
 spec:
-  memberSelectors:
-    - matchLabels:  
-      istio-injection: enabled
+  memberSelectors: 
+  - matchLabels: 
+      istio-injection: enabled 
