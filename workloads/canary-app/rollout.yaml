@@ -12,8 +12,6 @@ spec:
       app: rollouts-demo
   template:
     metadata:
-      annotations:
-        sidecar.istio.io/inject: "true"
       labels:
         app: rollouts-demo
     spec:
