@@ -15,7 +15,7 @@ resources:
 - openshift-distributed-tracing.yaml
 - openshift-operators-redhat-ns.yaml
 - openshift-operators-redhat.yaml
-# - servicemeshmemberroll-default.yaml
+- servicemeshmemberroll.yaml
 - servicemeshoperator.yaml
 - service-monitor.yaml
 - smcp.yaml
