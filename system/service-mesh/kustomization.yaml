@@ -5,7 +5,7 @@ commonAnnotations:
   argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 
 resources:
-- cluster-monitoring-config.yaml
+#- cluster-monitoring-config.yaml
 - elasticsearch-operator.yaml
 - istio-system-ns.yaml
 - isto-prom-rbac.yaml
