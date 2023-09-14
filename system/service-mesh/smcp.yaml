@@ -3,6 +3,8 @@ apiVersion: maistra.io/v2
 metadata:
   name: smcp
   namespace: istio-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
 spec:
   version: v2.4
   tracing:
