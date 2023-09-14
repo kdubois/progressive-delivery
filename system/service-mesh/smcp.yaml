@@ -1,26 +1,25 @@
-apiVersion: maistra.io/v2
 kind: ServiceMeshControlPlane
+apiVersion: maistra.io/v2
 metadata:
   name: smcp
   namespace: istio-system
 spec:
+  version: v2.4
   tracing:
     type: Jaeger
     sampling: 10000
   policy:
     type: Istiod
+  telemetry:
+    type: Istiod
   addons:
-    grafana:
-      enabled: true
     jaeger:
       install:
         storage:
           type: Memory
-    kiali:
-      enabled: true
     prometheus:
       enabled: true
-  telemetry:
-    type: Istiod
-  version: v2.4
-  mode: ClusterWide
+    kiali:
+      enabled: true
+    grafana:
+      enabled: true
