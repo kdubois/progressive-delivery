@@ -25,3 +25,8 @@ spec:
       enabled: true
     grafana:
       enabled: true
+  security:
+    identity:
+      type: ThirdParty
+      thirdParty:
+        audience: istio-ca
