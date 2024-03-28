@@ -3,5 +3,5 @@ kind: Namespace
 metadata:
   name: canary
   labels: 
-    istio-injection: enabled
+    sidecar.istio.io/inject: "true"
 spec: {}

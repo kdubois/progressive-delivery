@@ -3,8 +3,6 @@ kind: Rollout
 metadata:
   name: rollouts-demo
   namespace: canary
-  labels: 
-    istio-injection: enabled
 spec:
   replicas: 10
   revisionHistoryLimit: 1
@@ -16,7 +14,7 @@ spec:
     metadata:
       labels:
         app: rollouts-demo
-        istio-injection: enabled
+        sidecar.istio.io/inject: "true"
     spec:
       containers:
       - name: rollouts-demo
