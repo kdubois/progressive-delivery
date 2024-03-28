@@ -1,0 +1,11 @@
+apiVersion: maistra.io/v1
+kind: ServiceMeshMemberRoll
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "16"
+  name: default
+  namespace: istio-system
+spec:
+  memberSelectors: 
+  - matchLabels: 
+      istio-injection: enabled 
