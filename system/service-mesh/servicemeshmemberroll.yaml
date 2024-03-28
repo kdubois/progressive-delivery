@@ -8,4 +8,4 @@ metadata:
 spec:
   memberSelectors: 
   - matchLabels: 
-      istio-injection: enabled 
+      sidecar.istio.io/inject: "true"
