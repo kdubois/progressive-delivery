@@ -16,6 +16,7 @@ spec:
     metadata:
       labels:
         app: rollouts-demo
+        istio-injection: enabled
     spec:
       containers:
       - name: rollouts-demo
