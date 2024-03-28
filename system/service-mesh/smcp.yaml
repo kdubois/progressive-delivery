@@ -6,7 +6,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "15"
 spec:
-  version: v2.4
+  version: v2.5
   tracing:
     type: Jaeger
     sampling: 10000
