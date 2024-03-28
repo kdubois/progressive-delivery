@@ -3,6 +3,8 @@ kind: Rollout
 metadata:
   name: rollouts-demo
   namespace: canary
+  labels: 
+    istio-injection: enabled
 spec:
   replicas: 10
   revisionHistoryLimit: 1
