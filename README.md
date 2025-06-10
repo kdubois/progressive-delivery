@@ -129,5 +129,3 @@ oc argo rollouts retry rollout rollouts-demo -n canary
 
 This time, the rollout should finish and you should have blue squares.
 
-
-http://istio-ingressgateway-istio-system.apps.voxxeddays.w6gk.p1.openshiftapps.com/

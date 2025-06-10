@@ -27,7 +27,7 @@ spec:
   strategy:
     canary:
       analysis:
-        startingStep: 2 # delay starting analysis run until setWeight: 30
+        startingStep: 2 # delay starting analysis run until we have collected enough metrics
         args:
         - name: service-name
           value: rollouts-demo-canary.canary.svc.cluster.local
@@ -43,10 +43,10 @@ spec:
             - primary
       steps:
       - setWeight: 20
-      - pause: { duration: 20s }
+      - pause: { duration: 30s }
       - setWeight: 30
-      - pause: { duration: 15s }
+      - pause: { duration: 20s }
       - setWeight: 60
-      - pause: { duration: 10s }
+      - pause: { duration: 20s }
       - setWeight: 100
-      - pause: { duration: 5s }
+      - pause: { duration: 20s }
