@@ -31,8 +31,18 @@ spec:
         args:
         - name: service-name
           value: rollouts-demo-canary.canary.svc.cluster.local
+        - name: stable-pod-label
+          value: app=rollouts-demo,revision=stable
+        - name: canary-pod-label
+          value: app=rollouts-demo,revision=canary
+        - name: namespace
+          value: canary
+        - name: canary-pod
+          valueFrom:
+            podTemplateHashValue: Latest
         templates:
-          - templateName: success-rate
+          #- templateName: success-rate
+          - templateName: ai-analysis-agent
       canaryService: rollouts-demo-canary
       stableService: rollouts-demo-stable
       trafficRouting:

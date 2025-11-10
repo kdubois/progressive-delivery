@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: ai-analysis-agent
+  namespace: canary
+spec:
+  args:
+  - name: namespace
+  - name: canary-pod
+  - name: stable-pod-label
+    value: app=rollouts-demo,revision=stable
+  - name: canary-pod-label
+    value: app=rollouts-demo,revision=canary
+  metrics:
+  - name: ai-log-analysis
+    provider:
+      plugin:
+        argoproj-labs/metric-ai:
+          analysisMode: agent
+          namespace: "{{args.namespace}}"
+          podName: "{{args.canary-pod}}"
+          # Fallback fields for default mode if agent is unavailable
+          stablePodLabel: "{{args.stable-pod-label}}"
+          canaryPodLabel: "{{args.canary-pod-label}}"
+          model: gemini-2.0-flash-exp
+          baseBranch: main
+          githubUrl: https://github.com/kdubois/progressive-delivery
+          extraPrompt: "Focus on error rates, performance, and resource usage. This is a critical production deployment using agent-based analysis."
+
+# Made with Bob
