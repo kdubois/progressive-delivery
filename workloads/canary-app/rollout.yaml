@@ -26,6 +26,13 @@ spec:
           protocol: TCP
   strategy:
     canary:
+      # Add revision labels to stable and canary pods
+      stableMetadata:
+        labels:
+          revision: stable
+      canaryMetadata:
+        labels:
+          revision: canary
       analysis:
         startingStep: 2 # delay starting analysis run until we have collected enough metrics
         args:
