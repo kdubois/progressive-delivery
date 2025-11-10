@@ -8,9 +8,9 @@ spec:
   - name: namespace
   - name: canary-pod
   - name: stable-pod-label
-    value: app=rollouts-demo,revision=stable
+    value: app=rollouts-demo,role=stable
   - name: canary-pod-label
-    value: app=rollouts-demo,revision=canary
+    value: app=rollouts-demo,role=canary
   metrics:
   - name: ai-log-analysis
     provider:

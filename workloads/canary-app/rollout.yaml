@@ -29,19 +29,19 @@ spec:
       # Add revision labels to stable and canary pods
       stableMetadata:
         labels:
-          revision: stable
+          role: stable
       canaryMetadata:
         labels:
-          revision: canary
+          role: canary
       analysis:
         startingStep: 2 # delay starting analysis run until we have collected enough metrics
         args:
         - name: service-name
           value: rollouts-demo-canary.canary.svc.cluster.local
         - name: stable-pod-label
-          value: app=rollouts-demo,revision=stable
+          value: app=rollouts-demo,role=stable
         - name: canary-pod-label
-          value: app=rollouts-demo,revision=canary
+          value: app=rollouts-demo,role=canary
         - name: namespace
           value: canary
         - name: canary-pod
