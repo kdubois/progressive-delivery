@@ -20,8 +20,8 @@ spec:
           namespace: "{{args.namespace}}"
           podName: "{{args.canary-pod}}"
           # Fallback fields for default mode if agent is unavailable
-          stablePodLabel: "{{args.stable-pod-label}}"
-          canaryPodLabel: "{{args.canary-pod-label}}"
+          stableLabel: "{{args.stable-pod-label}}"
+          canaryLabel: "{{args.canary-pod-label}}"
           model: gemini-2.0-flash-exp
           baseBranch: main
           githubUrl: https://github.com/kdubois/progressive-delivery
