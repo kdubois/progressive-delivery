@@ -20,4 +20,3 @@ images:
 patchesStrategicMerge:
 - add-ca-to-rollouts.yaml
 - plugin-config-patch.yaml
-- rbac-patch.yaml
