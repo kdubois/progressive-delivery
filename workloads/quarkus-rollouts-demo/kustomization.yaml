@@ -18,23 +18,23 @@ patches:
       version: v1alpha1
       group: argoproj.io
       kind: Rollout
-      name: argo-rollouts-quarkus-demo
+      name: quarkus-demo
     patch: |-
       apiVersion: argoproj.io/v1alpha1
       kind: Rollout
       metadata:
-        name: argo-rollouts-quarkus-demo
+        name: quarkus-demo
       spec:
         template:
           spec:
             containers:
-            - name: argo-rollouts-quarkus-demo
+            - name: quarkus-demo
               image: quay.io/kevindubois/argo-rollouts-quarkus-demo:1.0.1
               env:
               - name: SCENARIO_MODE
                 value: "failure"
               - name: ROLLOUT_NAME
-                value: "argo-rollouts-quarkus-demo"
+                value: "quarkus-demo"
               - name: ROLLOUT_NAMESPACE
-                value: "argo-rollouts-quarkus-demo"
+                value: "quarkus-demo"
 
