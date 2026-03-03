@@ -2,15 +2,15 @@ apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
   name: ai-analysis-agent
-  namespace: argo-rollouts-quarkus-demo
+  namespace: quarkus-demo
 spec:
   args:
   - name: namespace
   - name: canary-pod
   - name: stable-pod-label
-    value: app=argo-rollouts-quarkus-demo,role=stable
+    value: app=quarkus-demo,role=stable
   - name: canary-pod-label
-    value: app=argo-rollouts-quarkus-demo,role=canary
+    value: app=quarkus-demo,role=canary
   metrics:
     - name: ai-analysis
       provider:

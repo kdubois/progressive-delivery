@@ -1,8 +1,8 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: argo-rollouts-quarkus-demo-canary
-  namespace: argo-rollouts-quarkus-demo
+  name: quarkus-demo-canary
+  namespace: quarkus-demo
 spec:
   ports:
   - port: 80
@@ -10,4 +10,4 @@ spec:
     protocol: TCP
     name: http
   selector:
-    app: argo-rollouts-quarkus-demo
+    app: quarkus-demo

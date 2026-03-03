@@ -113,7 +113,7 @@ oc logs deployment/argo-rollouts -n openshift-gitops | grep -i "metric-ai"
 Get the application route URL and open it in your browser:
 
 ```shell
-export APP_URL=$(oc get route argo-rollouts-quarkus-demo -n argo-rollouts-quarkus-demo -o jsonpath='{.spec.host}')
+export APP_URL=$(oc get route quarkus-demo -n quarkus-demo -o jsonpath='{.spec.host}')
 firefox https://$APP_URL
 ```
 
@@ -140,7 +140,7 @@ git push
 Watch the rollout progress:
 
 ```shell
-oc argo rollouts get rollout argo-rollouts-quarkus-demo -n argo-rollouts-quarkus-demo --watch
+oc argo rollouts get rollout quarkus-demo -n quarkus-demo --watch
 ```
 
 During each canary step, the AI analysis occurs:
@@ -155,10 +155,10 @@ View analysis results:
 
 ```shell
 # List all analysis runs
-oc get analysisrun -n argo-rollouts-quarkus-demo
+oc get analysisrun -n quarkus-demo
 
 # View specific analysis details
-oc get analysisrun <name> -n argo-rollouts-quarkus-demo -o yaml
+oc get analysisrun <name> -n quarkus-demo -o yaml
 ```
 
 ### Test Auto-Rollback
@@ -193,7 +193,7 @@ git push
 ```shell
 # Monitor the rollback
 
-oc argo rollouts get rollout argo-rollouts-quarkus-demo -n argo-rollouts-quarkus-demo --watch
+oc argo rollouts get rollout quarkus-demo -n quarkus-demo --watch
 
 ```
 
@@ -213,7 +213,7 @@ git push
 
 # Or manually retry the rollout
 
-oc argo rollouts retry rollout argo-rollouts-quarkus-demo -n argo-rollouts-quarkus-demo
+oc argo rollouts retry rollout quarkus-demo -n quarkus-demo
 ```
 
 ## Configuration
@@ -284,10 +284,10 @@ oc exec -it deployment/argo-rollouts -n openshift-gitops -- \
 
 ```shell
 # Check AnalysisTemplate configuration
-oc get analysistemplate ai-analysis-agent -n argo-rollouts-quarkus-demo -o yaml
+oc get analysistemplate ai-analysis-agent -n quarkus-demo -o yaml
 
 # Verify pod labels match selectors
-oc get pods -n argo-rollouts-quarkus-demo --show-labels
+oc get pods -n quarkus-demo --show-labels
 
 # Check agent can access logs
 oc logs deployment/kubernetes-agent -n openshift-gitops | grep -i "fetching logs"

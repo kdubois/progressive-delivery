@@ -1,16 +1,16 @@
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: argo-rollouts-quarkus-demo
-  namespace: argo-rollouts-quarkus-demo
+  name: quarkus-demo
+  namespace: quarkus-demo
 spec:
   to:
     kind: Service
-    name: argo-rollouts-quarkus-demo-stable
+    name: quarkus-demo-stable
     weight: 100
   alternateBackends:
   - kind: Service
-    name: argo-rollouts-quarkus-demo-canary
+    name: quarkus-demo-canary
     weight: 0
   port:
     targetPort: http

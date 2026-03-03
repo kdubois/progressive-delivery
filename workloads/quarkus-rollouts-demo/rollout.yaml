@@ -1,23 +1,23 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: argo-rollouts-quarkus-demo
-  namespace: argo-rollouts-quarkus-demo
+  name: quarkus-demo
+  namespace: quarkus-demo
 spec:
   replicas: 10
   revisionHistoryLimit: 1
   minReadySeconds: 5
   selector:
     matchLabels:
-      app: argo-rollouts-quarkus-demo
+      app: quarkus-demo
   template:
     metadata:
       labels:
-        app: argo-rollouts-quarkus-demo
+        app: quarkus-demo
     spec:
-      serviceAccountName: argo-rollouts-quarkus-demo
+      serviceAccountName: quarkus-demo
       containers:
-      - name: argo-rollouts-quarkus-demo
+      - name: quarkus-demo
         image: quay.io/kevindubois/argo-rollouts-quarkus-demo
         imagePullPolicy: Always
         ports:
@@ -40,13 +40,13 @@ spec:
         startingStep: 2 # delay starting analysis run until we have collected enough metrics
         args:
         - name: service-name
-          value: argo-rollouts-quarkus-demo-canary.argo-rollouts-quarkus-demo.svc.cluster.local
+          value: quarkus-demo-canary.quarkus-demo.svc.cluster.local
         - name: stable-pod-label
-          value: app=argo-rollouts-quarkus-demo,role=stable
+          value: app=quarkus-demo,role=stable
         - name: canary-pod-label
-          value: app=argo-rollouts-quarkus-demo,role=canary
+          value: app=quarkus-demo,role=canary
         - name: namespace
-          value: argo-rollouts-quarkus-demo
+          value: quarkus-demo
         - name: canary-pod
           valueFrom:
             podTemplateHashValue: Latest
