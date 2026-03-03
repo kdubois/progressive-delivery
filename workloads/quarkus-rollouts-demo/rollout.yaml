@@ -27,6 +27,10 @@ spec:
         env:
         - name: SCENARIO_MODE
           value: "success"
+        - name: ROLLOUT_NAME
+          value: "quarkus-demo"
+        - name: ROLLOUT_NAMESPACE
+          value: "quarkus-demo"
   strategy:
     canary:
       # Add revision labels to stable and canary pods
