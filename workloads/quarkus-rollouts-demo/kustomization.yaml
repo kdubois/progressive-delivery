@@ -30,6 +30,10 @@ patches:
             containers:
             - name: quarkus-demo
               image: quay.io/kevindubois/argo-rollouts-quarkus-demo:1.0.1
+              ports:
+              - name: http
+                containerPort: 8080
+                protocol: TCP
               env:
               - name: SCENARIO_MODE
                 value: "failure"
