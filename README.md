@@ -50,7 +50,7 @@ This command will retry until successful, as some resources depend on operators 
 
 ### Configure Secrets
 
-After the initial deployment completes and the `openshift-gitops` namespace exists, create the Kubernetes agent secret with your API credentials:
+After the initial deployment completes and the `openshift-gitops` namespace exists, create the Kubernetes agent secret with your API credentials (Note, you don't have to set all credentials. e.g. if you're using openai-spec you don't need to fill in the google_api_key and vice-versa):
 
 ```shell
 # Copy the template
@@ -68,9 +68,9 @@ stringData:
   google_api_key: "YOUR_GOOGLE_API_KEY"
   
   # OR for OpenAI-compatible models:
-  openai_api_key: "YOUR_OPENAI_API_KEY"
-  openai_model: "gpt-4o"
-  openai_base_url: "https://api.openai.com/v1"
+  openai_api_key: "YOUR_API_KEY"
+  openai_model: "Granite-4.0-H-Small"
+  openai_base_url: "https://your-openai-compatible-server-url.com/v1"
   
   # GitHub token for issue creation
   github_token: "YOUR_GITHUB_TOKEN"
@@ -86,8 +86,6 @@ Apply the secret:
 ```shell
 oc apply -f system/kubernetes-agent/secret.yaml
 ```
-
-The Kubernetes agent will automatically restart and pick up the new credentials.
 
 ### Verify Deployment
 
@@ -165,21 +163,56 @@ oc get analysisrun <name> -n argo-rollouts-quarkus-demo -o yaml
 
 ### Test Auto-Rollback
 
-The sample application includes a failure mode that can be triggered via the UI. To test automatic rollback:
 
-1. Start a new rollout by updating the application
-2. Once the rollout begins, trigger errors in the canary pods using the UI slider
-3. Watch as the AI agent detects the errors and aborts the rollout
+The sample application includes a failure mode that can be triggered by setting the `SCENARIO_MODE` environment variable. To test automatic rollback:
+
+
+
+1. Update the kustomization file to enable error scenario mode:
+
+```shell
+# Edit the kustomization file to set SCENARIO_MODE
+vim workloads/quarkus-rollouts-demo/kustomization.yaml
+
+# Add or update the patch to set SCENARIO_MODE to 'failure'
+# Example:
+#              env:
+#              - name: SCENARIO_MODE
+#                value: "failure"
+# Commit and push the change
+git add .
+git commit -m "Enable error scenario for rollback test"
+git push
+```
+
+2. Start a new rollout by updating the application version
+3. Watch as the AI agent detects the errors in the canary pods and aborts the rollout
+
 4. The deployment automatically rolls back to the stable version
 
 ```shell
 # Monitor the rollback
-oc argo rollouts get rollout argo-rollouts-quarkus-demo -n argo-rollouts-quarkus-demo
+
+oc argo rollouts get rollout argo-rollouts-quarkus-demo -n argo-rollouts-quarkus-demo --watch
+
 ```
 
-To retry after fixing the issue:
+
+To fix and retry after the rollback:
+
 
 ```shell
+
+# Change SCENARIO_MODE in the kustomization file back to 'success'
+vim workloads/quarkus-rollouts-demo/kustomization.yaml
+
+# Commit and push
+git add .
+git commit -m "Disable error scenario"
+git push
+
+# Or manually retry the rollout
+
 oc argo rollouts retry rollout argo-rollouts-quarkus-demo -n argo-rollouts-quarkus-demo
 ```
 

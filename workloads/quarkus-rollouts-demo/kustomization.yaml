@@ -20,20 +20,21 @@ patches:
       kind: Rollout
       name: argo-rollouts-quarkus-demo
     patch: |-
-      - op: replace
-        path: /spec/template/spec/containers/0/image
-        value: quay.io/kevindubois/argo-rollouts-quarkus-demo:1.0.1
-      - op: replace
-        path: /spec/template/spec/containers/0/env/0/value
-        value: "failure"
-      - op: add
-        path: /spec/template/spec/containers/0/env/-
-        value:
-          name: ROLLOUT_NAME
-          value: "argo-rollouts-quarkus-demo"
-      - op: add
-        path: /spec/template/spec/containers/0/env/-
-        value:
-          name: ROLLOUT_NAMESPACE
-          value: "argo-rollouts-quarkus-demo"
+      apiVersion: argoproj.io/v1alpha1
+      kind: Rollout
+      metadata:
+        name: argo-rollouts-quarkus-demo
+      spec:
+        template:
+          spec:
+            containers:
+            - name: argo-rollouts-quarkus-demo
+              image: quay.io/kevindubois/argo-rollouts-quarkus-demo:1.0.1
+              env:
+              - name: SCENARIO_MODE
+                value: "failure"
+              - name: ROLLOUT_NAME
+                value: "argo-rollouts-quarkus-demo"
+              - name: ROLLOUT_NAMESPACE
+                value: "argo-rollouts-quarkus-demo"
 
