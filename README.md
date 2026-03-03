@@ -104,9 +104,14 @@ curl http://localhost:8080/q/health
 # Expected: {"status":"UP",...}
 
 # Confirm plugin is loaded
-oc logs deployment/argo-rollouts -n openshift-gitops | grep -i "metric-ai"
-# Expected: "Successfully loaded plugin: argoproj-labs/metric-ai"
+oc logs deployment/argo-rollouts -n openshift-gitops | grep -i "download.*metric-ai"
+# Expected: "Downloading plugin argoproj-labs/metric-ai from: ..."
+# Expected: "Download complete, it took X.XXs"
+
+# If the plugin is not loaded, see the "Plugin Not Loading" section in Troubleshooting
 ```
+
+**Note:** Due to a known bug in the current OpenShift GitOps RolloutManager operator, the plugin may not load on first deployment. If you see plugin-related errors during rollouts, refer to the [Plugin Not Loading](#plugin-not-loading) troubleshooting section. This issue will be fixed in the next OpenShift GitOps release.
 
 ### Access the Application
 
@@ -257,6 +262,28 @@ The Kubernetes agent runs as a separate service in the `openshift-gitops` namesp
 ## Troubleshooting
 
 ### Plugin Not Loading
+
+If you encounter the error "plugin argoproj-labs/metric-ai not configured in configmap", this is due to a known bug in the OpenShift GitOps RolloutManager operator where plugin configuration doesn't always sync properly to the Argo Rollouts controller on initial deployment.
+
+**Workaround (temporary - fixed in next OpenShift GitOps release):**
+
+```shell
+# Delete the Argo Rollouts pod to force plugin reinitialization
+oc delete pod -n openshift-gitops -l app.kubernetes.io/name=argo-rollouts
+
+# Wait for the new pod to be ready
+oc wait --for=condition=ready pod -n openshift-gitops -l app.kubernetes.io/name=argo-rollouts --timeout=60s
+
+# Verify the plugin was downloaded successfully
+oc logs -n openshift-gitops -l app.kubernetes.io/name=argo-rollouts | grep -i "download.*metric-ai"
+# Expected: "Downloading plugin argoproj-labs/metric-ai from: ..."
+# Expected: "Download complete, it took X.XXs"
+
+# Retry any failed rollouts
+oc argo rollouts retry rollout quarkus-demo -n quarkus-demo
+```
+
+**General plugin troubleshooting:**
 
 ```shell
 # Check ConfigMap configuration
