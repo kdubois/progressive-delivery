@@ -18,7 +18,7 @@ spec:
       serviceAccountName: quarkus-demo
       containers:
       - name: quarkus-demo
-        image: quay.io/kevindubois/argo-rollouts-quarkus-demo
+        image: quay.io/kevindubois/argo-rollouts-quarkus-demo:latest
         imagePullPolicy: Always
         ports:
         - name: http
