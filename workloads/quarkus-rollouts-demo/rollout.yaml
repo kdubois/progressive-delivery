@@ -53,13 +53,13 @@ spec:
         templates:
           #- templateName: success-rate
           - templateName: ai-analysis-agent
-      canaryService: argo-rollouts-quarkus-demo-canary
-      stableService: argo-rollouts-quarkus-demo-stable
+      canaryService: quarkus-demo-canary
+      stableService: quarkus-demo-stable
       trafficRouting:
         plugins:
           argoproj-labs/openshift:
             routes:
-            - argo-rollouts-quarkus-demo
+            - quarkus-demo
       steps:
       - setWeight: 10
       - pause: { duration: 20s } # 20 seconds to start gathering metrics before starting analysis
