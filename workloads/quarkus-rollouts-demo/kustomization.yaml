@@ -29,7 +29,7 @@ patches:
           spec:
             containers:
             - name: quarkus-demo
-              image: quay.io/kevindubois/argo-rollouts-quarkus-demo:1.0.5
+              image: quay.io/kevindubois/argo-rollouts-quarkus-demo:1.0.6
               imagePullPolicy: Always
               ports:
               - name: http
@@ -37,7 +37,7 @@ patches:
                 protocol: TCP
               env:
               - name: SCENARIO_MODE
-                value: "failure"
+                value: "success"
               - name: ROLLOUT_NAME
                 value: "quarkus-demo"
               - name: ROLLOUT_NAMESPACE
