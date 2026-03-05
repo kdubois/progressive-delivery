@@ -29,7 +29,7 @@ patches:
           spec:
             containers:
             - name: quarkus-demo
-              image: quay.io/kevindubois/argo-rollouts-quarkus-demo:1.0.7
+              image: quay.io/kevindubois/argo-rollouts-quarkus-demo:bug
               imagePullPolicy: Always
               ports:
               - name: http
@@ -37,14 +37,14 @@ patches:
                 protocol: TCP
               env:
               - name: SCENARIO_MODE
-                value: "failure"
+                value: "success"
               - name: ROLLOUT_NAME
                 value: "quarkus-demo"
               - name: ROLLOUT_NAMESPACE
                 value: "quarkus-demo"
               # Bug scenario flags (set to true to enable)
               - name: ENABLE_MEMORY_LEAK
-                value: "true"
+                value: "false"
               - name: ENABLE_CONNECTION_LEAK
                 value: "false"
               - name: ENABLE_CPU_SPIKE
