@@ -68,7 +68,7 @@ spec:
       - setWeight: 10
       - pause: { duration: 10s } # 10 seconds to start gathering metrics before starting analysis
       - setWeight: 10
-      - pause: { duration: 70s } # 70 seconds to let the analysis do its job
+      - pause: { duration: 40s } # 40 seconds to let the analysis do its job
       - setWeight: 60
       - pause: { duration: 20s } # if everything is going well, continue rolling out
       - setWeight: 100
