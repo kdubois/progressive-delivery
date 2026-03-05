@@ -44,7 +44,7 @@ patches:
                 value: "quarkus-demo"
               # Bug scenario flags (set to true to enable)
               - name: ENABLE_MEMORY_LEAK
-                value: "false"
+                value: "true"
               - name: ENABLE_CONNECTION_LEAK
                 value: "false"
               - name: ENABLE_CPU_SPIKE
