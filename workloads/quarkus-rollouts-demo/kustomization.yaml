@@ -37,14 +37,14 @@ patches:
                 protocol: TCP
               env:
               - name: SCENARIO_MODE
-                value: "success"
+                value: "failure"
               - name: ROLLOUT_NAME
                 value: "quarkus-demo"
               - name: ROLLOUT_NAMESPACE
                 value: "quarkus-demo"
               # Bug scenario flags (set to true to enable)
               - name: ENABLE_MEMORY_LEAK
-                value: "false"
+                value: "true"
               - name: ENABLE_CONNECTION_LEAK
                 value: "false"
               - name: ENABLE_CPU_SPIKE
