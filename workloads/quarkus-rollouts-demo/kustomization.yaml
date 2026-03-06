@@ -36,8 +36,6 @@ patches:
                 containerPort: 8080
                 protocol: TCP
               env:
-              - name: SCENARIO_MODE
-                value: "success"
               - name: ROLLOUT_NAME
                 value: "quarkus-demo"
               - name: ROLLOUT_NAMESPACE
