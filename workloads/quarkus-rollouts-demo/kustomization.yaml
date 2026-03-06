@@ -29,7 +29,7 @@ patches:
           spec:
             containers:
             - name: quarkus-demo
-              image: quay.io/kevindubois/argo-rollouts-quarkus-demo:1.0.7
+              image: quay.io/kevindubois/argo-rollouts-quarkus-demo:npe
               imagePullPolicy: Always
               ports:
               - name: http
