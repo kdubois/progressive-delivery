@@ -49,4 +49,3 @@ patches:
                 value: "false"
               - name: ENABLE_CPU_SPIKE
                 value: "false"
-
