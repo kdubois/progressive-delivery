@@ -70,6 +70,6 @@ spec:
       - setWeight: 10
       - pause: { duration: 40s } # 40 seconds to let the analysis do its job
       - setWeight: 60
-      - pause: { duration: 20s } # if everything is going well, continue rolling out
+      - pause: { duration: 20s } # if everything is going well, continue rolling out but give some time to manually abort if needed
       - setWeight: 100
       - pause: { duration: 10s } # finish rolling out to everyone
