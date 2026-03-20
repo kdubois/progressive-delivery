@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: quarkus-demo
+spec:
+  template:
+    metadata:
+      labels:
+        scenario: null-pointer-bug
+        version: v2.0.0
+    spec:
+      containers:
+      - name: quarkus-demo
+        image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v2.nullpointer

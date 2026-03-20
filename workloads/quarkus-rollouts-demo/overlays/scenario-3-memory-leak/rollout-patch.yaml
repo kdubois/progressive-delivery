@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: quarkus-demo
+spec:
+  template:
+    metadata:
+      labels:
+        scenario: memory-leak
+        version: v3.0.0
+    spec:
+      containers:
+      - name: quarkus-demo
+        image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v3.memoryleak
