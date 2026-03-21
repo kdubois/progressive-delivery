@@ -5,6 +5,7 @@ namespace: openshift-gitops
 
 resources:
   - rbac.yaml
+  - configmap.yaml
   - deployment.yaml
   - service.yaml
   # secret.yaml is managed manually (not in git due to .gitignore)

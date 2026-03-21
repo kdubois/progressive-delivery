@@ -24,52 +24,34 @@ spec:
             - containerPort: 8080
               name: http
               protocol: TCP
+          envFrom:
+            # Load model configuration from ConfigMap
+            - configMapRef:
+                name: kubernetes-agent-config
           env:
-            # OpenAI Configuration
+            # Sensitive data from secrets
             - name: OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: kubernetes-agent
                   key: openai_api_key
                   optional: true
-            - name: OPENAI_BASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: kubernetes-agent
-                  key: openai_base_url
-                  optional: true
-            - name: OPENAI_MODEL
-              valueFrom:
-                secretKeyRef:
-                  name: kubernetes-agent
-                  key: openai_model
-                  optional: true
-            # Gemini Configuration
             - name: GOOGLE_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: kubernetes-agent
                   key: google_api_key
                   optional: true
-            # GitHub Configuration
             - name: GITHUB_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: kubernetes-agent
                   key: github_token
-            # Google Cloud Configuration
             - name: GOOGLE_CLOUD_PROJECT
               valueFrom:
                 secretKeyRef:
                   name: kubernetes-agent
                   key: google_cloud_project
-                  optional: true
-            # Profile selection (optional - can override default)
-            - name: QUARKUS_PROFILE
-              valueFrom:
-                secretKeyRef:
-                  name: kubernetes-agent
-                  key: quarkus_profile
                   optional: true
             # Git Configuration
             - name: GIT_USERNAME
