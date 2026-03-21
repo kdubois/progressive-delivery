@@ -5,8 +5,11 @@ metadata:
   namespace: openshift-gitops
 data:
   # Default model configuration (qwen3-14b via LiteLLM)
-  OPENAI_BASE_URL: "https://api.openai.com/v1"
-  OPENAI_MODEL: "gpt-4o"
+  OPENAI_BASE_URL: "https://litellm-prod.apps.maas.redhatworkshops.io/v1"
+  OPENAI_MODEL: "qwen3-14b"
+
+  #OPENAI_BASE_URL: "https://api.openai.com/v1"
+  #OPENAI_MODEL: "gpt-4o-mini"
 
   
   # Gemini model configuration
