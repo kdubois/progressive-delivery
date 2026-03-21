@@ -5,12 +5,9 @@ metadata:
   namespace: openshift-gitops
 data:
   # Default model configuration (qwen3-14b via LiteLLM)
-  OPENAI_BASE_URL: "https://qwen3-14b-llm-hosting.apps.maas00.rs-dfw3.infra.demo.redhat.com/v1"
-  OPENAI_MODEL: "qwen3-14b"
-  
-  # RemediationAgent-specific model (also using qwen3-14b for testing)
-  REMEDIATION_BASE_URL: "https://qwen3-14b-llm-hosting.apps.maas00.rs-dfw3.infra.demo.redhat.com/v1"
-  REMEDIATION_MODEL: "qwen3-14b"
+  OPENAI_BASE_URL: "https://api.openai.com/v1"
+  OPENAI_MODEL: "gpt-4o"
+
   
   # Gemini model configuration
   GEMINI_MODEL: "gemini-2.5-flash"
