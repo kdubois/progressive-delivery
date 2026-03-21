@@ -4,9 +4,10 @@ metadata:
   name: kubernetes-agent-config
   namespace: openshift-gitops
 data:
-  # Default model configuration (qwen3-14b via LiteLLM)
-  OPENAI_BASE_URL: "https://qwen3-14b-llm-hosting.apps.maas00.rs-dfw3.infra.demo.redhat.com/v1"
-  OPENAI_MODEL: "qwen3-14b"
+  # Default model configuration - TEMPORARILY using real OpenAI due to qwen3-14b OAuth issues
+  # TODO: Revert to qwen3-14b once OAuth authentication is fixed
+  OPENAI_BASE_URL: "https://api.openai.com/v1"
+  OPENAI_MODEL: "gpt-4o-mini"
   
   # RemediationAgent-specific model (uses real OpenAI GPT-4o to avoid XML wrapping)
   REMEDIATION_BASE_URL: "https://api.openai.com/v1"
