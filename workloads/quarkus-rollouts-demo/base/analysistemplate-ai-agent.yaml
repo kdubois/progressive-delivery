@@ -15,7 +15,7 @@ spec:
     - name: ai-analysis
       failureLimit: 0
       count: 1
-      initialDelay: 30s
+      initialDelay: 5s
       provider:
         plugin:
           argoproj-labs/metric-ai:
