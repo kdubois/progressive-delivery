@@ -36,11 +36,11 @@ spec:
                   name: kubernetes-agent
                   key: openai_api_key
                   optional: true
-            - name: REMEDIATION_API_KEY
+            - name: REM_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: kubernetes-agent
-                  key: remediation_api_key
+                  key: rem_api_key
                   optional: true
             - name: GOOGLE_API_KEY
               valueFrom:

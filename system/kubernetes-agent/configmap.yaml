@@ -11,6 +11,10 @@ data:
   #OPENAI_BASE_URL: "https://api.openai.com/v1"
   #OPENAI_MODEL: "gpt-4o-mini"
 
+  # Remediation model configuration (GPT-4 for better JSON formatting)
+  # Uses separate API endpoint to avoid Qwen's Unicode quote issues
+  REM_BASE_URL: "https://api.openai.com/v1"
+  REM_MODEL: "gpt-4o-mini"
   
   # Gemini model configuration
   GEMINI_MODEL: "gemini-2.5-flash"
