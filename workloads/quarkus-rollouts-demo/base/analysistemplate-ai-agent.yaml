@@ -13,12 +13,8 @@ spec:
     value: app=quarkus-demo,role=canary
   metrics:
     - name: ai-analysis
-      # Allow up to 2 failures before aborting (handles transient issues during pod startup)
-      failureLimit: 2
-      # Take 3 measurements with 30s between each
-      count: 3
-      interval: 30s
-      # Wait 30s after canary pods start before first analysis
+      failureLimit: 0
+      count: 1
       initialDelay: 30s
       provider:
         plugin:
