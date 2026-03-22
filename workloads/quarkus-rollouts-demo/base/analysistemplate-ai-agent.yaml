@@ -13,6 +13,13 @@ spec:
     value: app=quarkus-demo,role=canary
   metrics:
     - name: ai-analysis
+      # Allow up to 2 failures before aborting (handles transient issues during pod startup)
+      failureLimit: 2
+      # Take 3 measurements with 30s between each
+      count: 3
+      interval: 30s
+      # Wait 30s after canary pods start before first analysis
+      initialDelay: 30s
       provider:
         plugin:
           argoproj-labs/metric-ai:
@@ -25,5 +32,5 @@ spec:
             githubUrl: https://github.com/kdubois/argo-rollouts-quarkus-demo
             baseBranch: main
             # Optional: Additional context for AI analysis
-            extraPrompt: "Ignore color changes. Consider LoadBalancerNegNotReady a temporary condition."
+            extraPrompt: "Ignore color changes. Consider LoadBalancerNegNotReady and 'Pod has no IP' warnings as temporary conditions during pod startup."
 
