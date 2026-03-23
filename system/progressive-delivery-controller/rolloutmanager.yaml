@@ -4,12 +4,6 @@ metadata:
   name: argo-rollouts
   namespace: openshift-gitops
 spec:
-  env:
-    - name: GITHUB_TOKEN
-      valueFrom:
-        secretKeyRef:
-          name: kubernetes-agent
-          key: github_token
   plugins:
     metric:
       - name: argoproj-labs/metric-ai
