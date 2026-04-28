@@ -1,0 +1,46 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: system-apps-existing-argocd
+  namespace: openshift-gitops
+spec:
+  generators:
+  - git:
+      repoURL: https://github.com/kdubois/progressive-delivery
+      revision: main
+      directories:
+      - path: system/kubernetes-agent
+      - path: system/progressive-delivery-controller
+      - path: system/gitops-controller-existing-argocd
+  template:
+    metadata:
+      name: '{{path.basename}}'
+    spec:
+      ignoreDifferences:
+      - kind: ConfigMap
+        jsonPointers:
+        - /data/service-ca.crt
+      - kind: ConfigMap
+        name: argo-rollouts-config
+        namespace: openshift-gitops
+        jsonPointers:
+        - /data
+      project: system
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - ApplyOutOfSyncOnly=true
+        retry:
+          limit: 15
+          backoff:
+            duration: 15s
+            factor: 2
+            maxDuration: 5m
+      source:
+        repoURL: https://github.com/kdubois/progressive-delivery
+        targetRevision: main
+        path: '{{path}}'
+      destination:
+        server: https://kubernetes.default.svc

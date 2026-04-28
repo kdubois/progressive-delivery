@@ -35,15 +35,27 @@ Fork this repository and update the ApplicationSet configurations in [`component
 
 ### Deploy the Stack
 
-Deploy to your OpenShift cluster:
+#### Option 1: Cluster does not already have Argo CD
+
+Deploy the full stack, including OpenShift GitOps:
 
 ```shell
 until oc apply -k bootstrap/overlays/default/; do sleep 15; done
 ```
 
-This command will retry until successful, as some resources depend on operators being installed first. Wait for the deployment to complete before proceeding. The deployment includes:
+#### Option 2: Cluster already has a shared `openshift-gitops` Argo CD
 
-- OpenShift GitOps (Argo CD)
+Reuse the existing Argo CD instance without installing the GitOps operator or replacing the `ArgoCD` resource:
+
+```shell
+until oc apply -k bootstrap/overlays/existing-argocd/; do sleep 15; done
+```
+
+See [`DEPLOYMENT_EXISTING_ARGOCD.md`](DEPLOYMENT_EXISTING_ARGOCD.md) for the full reproducible procedure and verification steps.
+
+These commands retry until successful, as some resources depend on operators being installed first. Wait for the deployment to complete before proceeding. The deployment includes:
+
+- OpenShift GitOps (Argo CD) when using [`bootstrap/overlays/default`](bootstrap/overlays/default/kustomization.yaml)
 - Argo Rollouts with AI metrics plugin
 - Kubernetes agent for AI analysis
 - Sample Quarkus application with canary configuration
