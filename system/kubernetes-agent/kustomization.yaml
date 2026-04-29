@@ -8,7 +8,15 @@ resources:
   - configmap.yaml
   - deployment.yaml
   - service.yaml
-  # secret.yaml is managed manually (not in git due to .gitignore)
-  # Create it from template: cp secret.yaml.template secret.yaml
-  # Then edit secret.yaml with actual values and apply
 
+# Generate secret from secrets.env file (git-ignored, located in project root)
+# Create secrets.env from environment variables:
+#   ./generate-secrets.sh
+# Or manually copy and edit:
+#   cp secrets.env.example secrets.env
+secretGenerator:
+  - name: kubernetes-agent
+    envs:
+      - ../../secrets.env
+    options:
+      disableNameSuffixHash: true
