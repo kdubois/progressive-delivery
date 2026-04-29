@@ -35,7 +35,7 @@ Fork this repository and update the ApplicationSet configurations in [`component
 
 ### Configure Secrets (Before Deployment)
 
-Before deploying the stack, configure the Kubernetes agent secrets by creating a `secret.yaml` file from the template.
+Before deploying the stack, you must create the Kubernetes agent secret manually in your cluster. The secret is **not managed by GitOps** because it contains sensitive credentials.
 
 ```shell
 # Copy the template to create your secret file
@@ -43,11 +43,14 @@ cp system/kubernetes-agent/secret.yaml.template system/kubernetes-agent/secret.y
 
 # Edit with your actual credentials
 vim system/kubernetes-agent/secret.yaml
+
+# Apply the secret directly to your cluster
+kubectl apply -f system/kubernetes-agent/secret.yaml
 ```
 
-**Note:** The `secret.yaml` file is git-ignored for security. Replace the placeholder values with your actual credentials.
+**Important:** The `secret.yaml` file is git-ignored for security. You must create this secret in your cluster before deploying via Argo CD.
 
-The secret expects these values:
+The secret template expects these values:
 
 ```yaml
 stringData:

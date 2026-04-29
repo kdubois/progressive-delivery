@@ -8,5 +8,7 @@ resources:
   - configmap.yaml
   - deployment.yaml
   - service.yaml
-  - secret.yaml  # Git-ignored file with actual secrets
-                 # Create from template: cp secret.yaml.template secret.yaml
+
+# Note: The kubernetes-agent secret must be created manually before deploying
+# It is NOT included in this kustomization because it contains sensitive data
+# See README.md for instructions on creating the secret
