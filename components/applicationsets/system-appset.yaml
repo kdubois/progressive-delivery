@@ -10,6 +10,7 @@ spec:
       revision: main
       directories:
       - path: system/*
+        exclude: system/gitops-controller-existing-argocd
   template:
     metadata:
       name: '{{path.basename}}'
