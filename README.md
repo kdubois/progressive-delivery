@@ -62,7 +62,7 @@ These commands retry until successful, as some resources depend on operators bei
 
 ### Configure Secrets
 
-After the initial deployment completes and the `openshift-gitops` namespace exists, create the Kubernetes agent secret with your API credentials (Note, you don't have to set all credentials. e.g. if you're using openai-spec you don't need to fill in the google_api_key and vice-versa):
+After the initial deployment completes and the `openshift-gitops` namespace exists, create the Kubernetes agent secret from the provided template at [`system/kubernetes-agent/secret.yaml.template`](system/kubernetes-agent/secret.yaml.template):
 
 ```shell
 # Copy the template
@@ -72,21 +72,34 @@ cp system/kubernetes-agent/secret.yaml.template system/kubernetes-agent/secret.y
 vim system/kubernetes-agent/secret.yaml
 ```
 
-Configure your credentials in the secret:
+Only fill in the credentials you actually plan to use. For example, if you are using OpenAI-compatible models, you can leave [`google_api_key`](progressive-delivery/system/kubernetes-agent/secret.yaml.template:16) unset.
+
+The template currently expects these values:
 
 ```yaml
 stringData:
-  # For Gemini (recommended)
-  google_api_key: "YOUR_GOOGLE_API_KEY"
-  
-  # OR for OpenAI-compatible models:
-  openai_api_key: "YOUR_API_KEY"
-  openai_model: "Granite-4.0-H-Small"
-  openai_base_url: "https://your-openai-compatible-server-url.com/v1"
-  
-  # GitHub token for issue creation
-  github_token: "YOUR_GITHUB_TOKEN"
+  # OpenAI API key used by the analysis agents
+  openai_api_key: ${OPENAI_API_KEY}
+
+  # Optional remediation model/API key used only by the remediation agent
+  rem_api_key: ${REM_API_KEY}
+
+  # Gemini API key if you run the agent with a Gemini profile
+  google_api_key: ${GOOGLE_API_KEY}
+
+  # GitHub token for creating pull requests and issues
+  github_token: ${GITHUB_TOKEN}
+
+  # Optional Google Cloud project
+  google_cloud_project: "${GOOGLE_CLOUD_PROJECT}"
 ```
+
+**Credential notes:**
+- `openai_api_key`: required when using the default OpenAI-compatible configuration
+- `rem_api_key`: optional unless you want separate credentials for remediation/code-fix flows
+- `google_api_key`: optional, used for Gemini-based setups
+- `github_token`: required if you want automatic GitHub issue or PR creation
+- `google_cloud_project`: optional
 
 **Where to obtain credentials:**
 - Google API key: https://aistudio.google.com/app/apikey

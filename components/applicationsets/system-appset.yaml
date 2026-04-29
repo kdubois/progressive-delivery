@@ -9,8 +9,9 @@ spec:
       repoURL: https://github.com/kdubois/progressive-delivery
       revision: main
       directories:
-      - path: system/*
-        exclude: system/gitops-controller-existing-argocd
+      - path: system/kubernetes-agent
+      - path: system/progressive-delivery-controller
+      - path: system/gitops-controller
   template:
     metadata:
       name: '{{path.basename}}'
