@@ -12,3 +12,18 @@ spec:
     server: '*'
   sourceRepos:
   - '*'
+  roles:
+  - name: read-only
+    description: Read-only privileges to workloads project
+    policies:
+    - p, proj:workloads:read-only, applications, get, workloads/*, allow
+    - p, proj:workloads:read-only, applications, list, workloads/*, allow
+    groups:
+    - system:authenticated
+  - name: admin
+    description: Admin privileges to workloads project
+    policies:
+    - p, proj:workloads:admin, applications, *, workloads/*, allow
+    groups:
+    - system:cluster-admins
+    - cluster-admins

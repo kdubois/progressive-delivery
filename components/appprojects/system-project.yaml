@@ -12,3 +12,18 @@ spec:
     server: '*'
   sourceRepos:
   - '*'
+  roles:
+  - name: read-only
+    description: Read-only privileges to system project
+    policies:
+    - p, proj:system:read-only, applications, get, system/*, allow
+    - p, proj:system:read-only, applications, list, system/*, allow
+    groups:
+    - system:authenticated
+  - name: admin
+    description: Admin privileges to system project
+    policies:
+    - p, proj:system:admin, applications, *, system/*, allow
+    groups:
+    - system:cluster-admins
+    - cluster-admins
