@@ -126,7 +126,7 @@ oc logs deployment/argo-rollouts -n openshift-gitops | grep -i "download.*metric
 # If the plugin is not loaded, see the "Plugin Not Loading" section in Troubleshooting
 ```
 
-**Note:** Due to a known bug in the current OpenShift GitOps RolloutManager operator, the plugin may not load on first deployment. If you see plugin-related errors during rollouts, refer to the [Plugin Not Loading](#plugin-not-loading) troubleshooting section. This issue will be fixed in the next OpenShift GitOps release.
+**Note:** If the plugin does not load on first deployment, this may be due to a timing issue with the RolloutManager operator. If you see plugin-related errors during rollouts, refer to the [Plugin Not Loading](#plugin-not-loading) troubleshooting section for a simple workaround (restart the argo-rollouts pod).
 
 ### Access the Application
 
@@ -276,7 +276,9 @@ The Kubernetes agent runs as a separate service in the `openshift-gitops` namesp
 
 #### ConfigMap Configuration
 
-Model and endpoint configuration is managed in [`system/kubernetes-agent/configmap.yaml`](system/kubernetes-agent/configmap.yaml):
+Model and endpoint configuration is managed in [`system/kubernetes-agent/configmap.yaml`](system/kubernetes-agent/configmap.yaml).
+
+**Note:** The ConfigMap contains environment-specific endpoints. Update these values to match your environment before deployment.
 
 ```yaml
 data:
