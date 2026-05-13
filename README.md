@@ -104,7 +104,7 @@ These commands retry until successful, as some resources depend on operators bei
 
 ### Verify Deployment
 
-Check that all components are running:
+You will have to wait a while before all components have been deployed. Once that's done, make sure you applied the secret from above, and then check that all components are running:
 
 ```shell
 # Verify Argo Rollouts
@@ -147,11 +147,11 @@ Update the application image version in the kustomization file:
 
 ```shell
 # Example: change from version 1.0.0 to 1.0.1
-sed -i 's/1.0.0/1.0.1/g' workloads/quarkus-rollouts-demo/kustomization.yaml
+sed -i 's/main/v1.stable/g' workloads/quarkus-rollouts-demo/base/rollouts.yaml
 
 # Commit and push
 git add .
-git commit -m "Update to version 1.0.1"
+git commit -m "Update to stable version"
 git push
 ```
 
@@ -188,17 +188,13 @@ The sample application includes a failure mode that can be triggered by setting 
 
 
 
-1. Update the kustomization file to enable error scenario mode:
+1. Update the kustomization file to enable error scenario mode. We have already provided a few images with null pointer or memory leak issues:
 
 ```shell
-# Edit the kustomization file to set SCENARIO_MODE
-vim workloads/quarkus-rollouts-demo/kustomization.yaml
+# Edit the rollouts file to point to one of these images:
+vim workloads/quarkus-rollouts-demo/workloads/base/rollout.yaml
 
-# Add or update the patch to set SCENARIO_MODE to 'failure'
-# Example:
-#              env:
-#              - name: SCENARIO_MODE
-#                value: "failure"
+
 # Commit and push the change
 git add .
 git commit -m "Enable error scenario for rollback test"
@@ -223,8 +219,8 @@ To fix and retry after the rollback:
 
 ```shell
 
-# Change SCENARIO_MODE in the kustomization file back to 'success'
-vim workloads/quarkus-rollouts-demo/kustomization.yaml
+# Change SCENARIO_MODE in the kustomization file back to a stable version
+vim workloads/quarkus-rollouts-demo/workloads/base/rollout.yaml
 
 # Commit and push
 git add .
