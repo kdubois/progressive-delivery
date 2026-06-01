@@ -48,7 +48,7 @@ vim system/kubernetes-agent/secret.yaml
 kubectl apply -f system/kubernetes-agent/secret.yaml
 ```
 
-**Important:** The `secret.yaml` file is git-ignored for security. You must create this secret in your cluster before deploying via Argo CD.
+**Important:** The `secret.yaml` file is git-ignored for security. You must create this secret in your cluster before or right after deploying via Argo CD.
 
 The secret template expects these values:
 
