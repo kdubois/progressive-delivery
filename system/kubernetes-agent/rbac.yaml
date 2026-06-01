@@ -21,6 +21,10 @@ rules:
   - apiGroups: ["apps"]
     resources: ["deployments", "statefulsets", "daemonsets", "replicasets"]
     verbs: ["get", "list", "watch"]
+  # Read Argo Rollouts (rollout summary endpoint, canary analysis context)
+  - apiGroups: ["argoproj.io"]
+    resources: ["rollouts", "analysisruns", "analysistemplates", "clusteranalysistemplates"]
+    verbs: ["get", "list", "watch"]
   # Read metrics
   - apiGroups: ["metrics.k8s.io"]
     resources: ["pods", "nodes"]
