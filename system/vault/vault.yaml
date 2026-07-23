@@ -1,0 +1,50 @@
+apiVersion: vault.banzaicloud.com/v1alpha1
+kind: Vault
+metadata:
+  name: vault
+  namespace: openshift-gitops
+spec:
+  size: 1
+  image: hashicorp/vault:1.19.0
+
+  # Store unseal keys and root token in a Kubernetes Secret.
+  # In production, switch to an auto-unseal provider (AWS KMS, GCP KMS, etc.)
+  bankVaultsImage: ghcr.io/bank-vaults/bank-vaults:latest
+
+  config:
+    storage:
+      file:
+        path: /vault/file
+
+    listener:
+    - tcp:
+        address: "0.0.0.0:8200"
+        tls_disable: true   # Enable TLS in production; update VAULT_ADDR to https://
+
+    api_addr: "http://vault.openshift-gitops.svc.cluster.local:8200"
+    ui: true
+
+  # Initialisation and unseal configuration
+  unsealConfig:
+    kubernetes:
+      secretNamespace: openshift-gitops
+
+  # Secrets engine and auth method setup handled by vault-bootstrap.sh,
+  # not by the operator, so that credentials are never committed to Git.
+
+  serviceAccount: vault
+
+  # Allow the Vault pod to run as non-root on OpenShift
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 1000
+
+  vaultContainerSpec:
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
