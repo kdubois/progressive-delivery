@@ -1,0 +1,44 @@
+# Vault server deployed via the official HashiCorp Helm chart.
+# Runs in dev mode (in-memory, auto-unseal) for demo/sandbox use.
+# For production, disable dev mode and enable HA with Raft storage.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vault
+  namespace: openshift-gitops
+spec:
+  project: system
+  source:
+    chart: vault
+    repoURL: https://helm.releases.hashicorp.com
+    targetRevision: 0.29.1
+    helm:
+      values: |
+        global:
+          openshift: true
+        server:
+          dev:
+            enabled: true
+            devRootToken: "root"
+          standalone:
+            enabled: true
+          resources:
+            requests:
+              memory: 256Mi
+              cpu: 100m
+            limits:
+              memory: 512Mi
+              cpu: 500m
+          authDelegator:
+            enabled: true
+        injector:
+          enabled: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openshift-gitops
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=false

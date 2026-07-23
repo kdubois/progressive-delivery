@@ -1,0 +1,7 @@
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultConnection
+metadata:
+  name: vault-connection
+  namespace: openshift-gitops
+spec:
+  address: http://vault.openshift-gitops.svc.cluster.local:8200

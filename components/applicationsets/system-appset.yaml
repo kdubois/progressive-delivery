@@ -12,8 +12,9 @@ spec:
       - path: system/kubernetes-agent
       - path: system/progressive-delivery-controller
       - path: system/gitops-controller
-      - path: system/vault-operator
-      - path: system/vault
+      - path: system/vault-server
+      - path: system/vault-secrets-operator
+      - path: system/vault-config
   template:
     metadata:
       name: '{{path.basename}}'

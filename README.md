@@ -64,15 +64,21 @@ stringData:
 - OpenAI API key: https://platform.openai.com/api-keys
 - GitHub token: https://github.com/settings/tokens (requires `repo` scope)
 
-#### Option B — Vault (opt-in)
+#### Option B — Vault + Vault Secrets Operator (recommended)
 
-If you have a HashiCorp Vault instance, the agent can read all credentials from a Vault KV path at startup instead of from the Kubernetes Secret. Run the [bootstrap script](#vault-path-only-run-the-bootstrap-script) below, then activate it by adding `vault` to the profile in [`system/kubernetes-agent/configmap.yaml`](system/kubernetes-agent/configmap.yaml):
+The stack includes HashiCorp Vault (deployed via the official Helm chart) and the Red Hat-certified Vault Secrets Operator (VSO). VSO syncs credentials from Vault KV to a Kubernetes Secret automatically, so the agent reads a standard K8s Secret without needing Vault-specific code.
 
-```yaml
-QUARKUS_PROFILE: "prod,openai,vault"   # or prod,gemini,vault
+After the stack is deployed, run the one-time [bootstrap script](#vault-bootstrap) to write credentials and configure Kubernetes auth:
+
+```shell
+export OPENAI_API_KEY="sk-..."
+export GITHUB_TOKEN="ghp_..."
+./bootstrap/vault/vault-bootstrap.sh
 ```
 
-**Important:** `secret.yaml` is git-ignored. Create the secret before or right after deploying via Argo CD.
+VSO then creates and keeps the `kubernetes-agent` Secret in sync. See the [Vault Bootstrap](#vault-bootstrap) section for details.
+
+**Important:** `secret.yaml` is git-ignored. When using Vault, the Secret is managed by VSO — do not create it manually.
 
 ### Deploy the Stack
 
@@ -101,51 +107,39 @@ See [`DEPLOYMENT_EXISTING_ARGOCD.md`](DEPLOYMENT_EXISTING_ARGOCD.md) for the ful
 The deployment includes:
 
 - OpenShift GitOps (Argo CD) when using [`bootstrap/overlays/default`](bootstrap/overlays/default/kustomization.yaml)
-- HashiCorp Vault operator + Vault instance (`system/vault/`)
+- HashiCorp Vault (official Helm chart, dev mode) + Vault Secrets Operator (Red Hat-certified)
 - Argo Rollouts with AI metrics plugin
 - Kubernetes agent for AI analysis
 - Sample Quarkus application with canary configuration
 
-#### Vault path only: run the bootstrap script
+#### Vault Bootstrap
 
-Once the stack is up and Vault is ready, run the one-time bootstrap script to configure Kubernetes auth, write your credentials to the Vault KV path, and activate the Vault profile:
+Once the stack is up and Vault is ready, run the one-time bootstrap script to write credentials and configure Kubernetes auth. The script handles port-forwarding automatically:
 
 ```shell
-# Wait for Vault to be ready
-oc wait pod -l app.kubernetes.io/name=vault -n openshift-gitops \
-  --for=condition=ready --timeout=120s
-
-export VAULT_ADDR="http://$(oc get svc vault -n openshift-gitops -o jsonpath='{.spec.clusterIP}'):8200"
-export VAULT_ADMIN_TOKEN="$(oc get secret vault-unseal-keys -n openshift-gitops \
-  -o jsonpath='{.data.vault-root}' | base64 -d)"
 export OPENAI_API_KEY="sk-..."
 export GITHUB_TOKEN="ghp_..."
-# export GOOGLE_API_KEY="..."   # if using Gemini
-# export REM_API_KEY="..."      # optional, defaults to OPENAI_API_KEY
+# export REM_API_KEY="..."          # optional, defaults to OPENAI_API_KEY
+# export GOOGLE_API_KEY="..."       # if using Gemini
 
 ./bootstrap/vault/vault-bootstrap.sh
 ```
 
 The script:
-1. Writes your credentials to `secret/argo-rollouts/kubernetes-agent` in Vault
-2. Configures Vault Kubernetes auth so the agent pod can authenticate
-3. Runs the in-cluster `vault-bootstrap` Job to set the policy and auth role
-4. Patches `kubernetes-agent-config` with `VAULT_ADDR`
-5. Cleans up the admin token Secret
+1. Waits for the Vault pod to be ready
+2. Port-forwards to Vault (dev mode root token is `root`)
+3. Enables the KV v2 secrets engine and writes your credentials
+4. Configures Kubernetes auth with a policy and role for the `kubernetes-agent` ServiceAccount
 
-After it completes, update `system/kubernetes-agent/configmap.yaml` with the Vault profile and address, then commit and push so Argo CD keeps the values on sync:
-
-```yaml
-QUARKUS_PROFILE: "prod,openai,vault"   # or prod,gemini,vault
-VAULT_ADDR: "http://vault.openshift-gitops.svc.cluster.local:8200"
-```
+After the script completes, the Vault Secrets Operator syncs the credentials to a K8s Secret named `kubernetes-agent`. Verify with:
 
 ```shell
-git add system/kubernetes-agent/configmap.yaml
-git commit -m "chore: activate Vault credential source"
-git push
-oc rollout restart deployment/kubernetes-agent -n openshift-gitops
+oc get secret kubernetes-agent -n openshift-gitops
 ```
+
+The VSO `VaultStaticSecret` is configured to automatically restart the kubernetes-agent Deployment when secrets change in Vault.
+
+**Dev mode note:** Vault runs in dev mode with in-memory storage. If the Vault pod restarts, re-run the bootstrap script to repopulate the secrets.
 
 ### Verify Deployment
 
@@ -426,17 +420,22 @@ oc logs deployment/kubernetes-agent -n openshift-gitops | grep -i "fetching logs
 ### API Key Issues
 
 ```shell
-# Verify secret exists and contains keys (K8s Secret path)
+# Verify secret exists and contains keys (synced by VSO from Vault)
 oc get secret kubernetes-agent -n openshift-gitops -o yaml
 
 # Check agent logs for authentication errors
 oc logs deployment/kubernetes-agent -n openshift-gitops | grep -i "auth\|api key"
 ```
 
-If you are using the Vault path (`prod,openai,vault` profile), the secret will not exist — check Vault connectivity instead:
+If the secret does not exist, check VSO status:
 
 ```shell
-oc logs deployment/kubernetes-agent -n openshift-gitops | grep -i "vault"
+# Check VaultStaticSecret sync status
+oc get vaultstaticsecret -n openshift-gitops
+oc describe vaultstaticsecret kubernetes-agent-secret -n openshift-gitops
+
+# Check VSO controller logs
+oc logs deployment/vault-secrets-operator-controller-manager -n openshift-operators | tail -20
 ```
 
 ### Enable Debug Logging

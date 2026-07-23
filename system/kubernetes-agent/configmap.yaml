@@ -21,8 +21,5 @@ data:
   GEMINI_MODEL: "gemini-2.5-flash"
   
   # Profile selection - set to 'prod,openai' or 'prod,gemini'
-  # Add ',vault' to read credentials from Vault instead of the K8s Secret
-  QUARKUS_PROFILE: "prod,openai,vault"
-
-  # Vault URL
-  VAULT_ADDR: "http://vault.openshift-gitops.svc.cluster.local:8200"
+  # Credentials are synced from Vault to a K8s Secret by the Vault Secrets Operator
+  QUARKUS_PROFILE: "prod,openai"

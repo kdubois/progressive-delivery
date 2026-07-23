@@ -28,12 +28,17 @@ system/
   kubernetes-agent/
     deployment.yaml                  # Quarkus agent (512Mi–2Gi)
     configmap.yaml                   # AI model endpoint and provider config
-    secret.yaml.template             # Credentials template for K8s Secret path — NOT managed by GitOps
+    secret.yaml.template             # Credentials template — NOT managed by GitOps
     rbac.yaml                        # ClusterRole: read pods/logs/events/rollouts
     service.yaml                     # ClusterIP :8080
-  vault/
-    vault.yaml                       # Vault CR (bank-vaults operator)
-    rbac.yaml                        # system:auth-delegator binding for Vault SA
+  vault-server/
+    vault-helm-app.yaml              # ArgoCD Application — deploys Vault via Helm chart (dev mode)
+  vault-secrets-operator/
+    vault-secrets-operator.yaml      # OLM Subscription — Red Hat-certified VSO
+  vault-config/
+    vault-connection.yaml            # VaultConnection — Vault server address
+    vault-auth.yaml                  # VaultAuth — Kubernetes auth method config
+    vault-static-secret.yaml         # VaultStaticSecret — syncs KV to K8s Secret
 
 workloads/
   quarkus-rollouts-demo/
@@ -81,7 +86,7 @@ cp system/kubernetes-agent/secret.yaml.template system/kubernetes-agent/secret.y
 kubectl apply -f system/kubernetes-agent/secret.yaml -n openshift-gitops
 ```
 
-**Vault path (opt-in):** Run `bootstrap/vault/vault-bootstrap.sh` (see the [README](README.md#vault-path-only-run-the-bootstrap-script)) and set `QUARKUS_PROFILE=prod,openai,vault` (or `prod,gemini,vault`) in `system/kubernetes-agent/configmap.yaml`.
+**Vault path (default for deployed stack):** Run `bootstrap/vault/vault-bootstrap.sh` (see the [README](README.md#vault-bootstrap)) to write credentials to Vault. The Vault Secrets Operator syncs them to the `kubernetes-agent` K8s Secret automatically.
 
 `secret.yaml` is git-ignored. Never commit credentials.
 

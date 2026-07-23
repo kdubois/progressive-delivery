@@ -1,29 +1,31 @@
 #!/bin/bash
 # vault-bootstrap.sh — one-time Vault setup for the kubernetes-agent
 #
-# Configures Vault Kubernetes auth and writes credentials to the KV path
-# that the agent reads at startup when QUARKUS_PROFILE includes "vault".
+# Writes credentials to Vault KV and configures Kubernetes auth so the
+# Vault Secrets Operator (VSO) can sync secrets to a K8s Secret.
 #
-# Run this ONCE before deploying, after the stack is up:
-#   export VAULT_ADDR="https://vault.example.com"
-#   export VAULT_ADMIN_TOKEN="<root-or-admin-token>"
+# Prerequisites:
+#   - Vault server running in openshift-gitops (deployed by ArgoCD Helm app)
+#   - vault CLI installed locally
+#   - oc / kubectl access to the cluster
+#
+# Usage:
 #   export OPENAI_API_KEY="sk-..."
 #   export GITHUB_TOKEN="ghp_..."
+#   # Optional: REM_API_KEY, GOOGLE_API_KEY, GOOGLE_CLOUD_PROJECT
 #   ./bootstrap/vault/vault-bootstrap.sh
 #
-# Optional variables:
-#   REM_API_KEY        (defaults to OPENAI_API_KEY)
-#   GOOGLE_API_KEY
-#   GOOGLE_CLOUD_PROJECT
-#   NAMESPACE          (defaults to openshift-gitops)
+# The script port-forwards to Vault automatically. No admin token is
+# needed — dev mode uses a well-known root token ("root").
 
 set -euo pipefail
 
 NAMESPACE="${NAMESPACE:-openshift-gitops}"
+VAULT_PORT="${VAULT_PORT:-8200}"
 
 # ── Validate required inputs ────────────────────────────────────────────────
 
-REQUIRED_VARS=(VAULT_ADDR VAULT_ADMIN_TOKEN OPENAI_API_KEY GITHUB_TOKEN)
+REQUIRED_VARS=(OPENAI_API_KEY GITHUB_TOKEN)
 MISSING=()
 for var in "${REQUIRED_VARS[@]}"; do
   [[ -z "${!var:-}" ]] && MISSING+=("$var")
@@ -33,17 +35,44 @@ if [[ ${#MISSING[@]} -gt 0 ]]; then
   echo "Error: missing required environment variables:"
   printf '  %s\n' "${MISSING[@]}"
   echo ""
-  echo "Export them before running this script:"
-  echo "  export VAULT_ADDR=https://vault.example.com"
-  echo "  export VAULT_ADMIN_TOKEN=<root-or-admin-token>"
+  echo "Usage:"
   echo "  export OPENAI_API_KEY=sk-..."
   echo "  export GITHUB_TOKEN=ghp_..."
+  echo "  ./bootstrap/vault/vault-bootstrap.sh"
   exit 1
 fi
 
+# ── Wait for Vault to be ready ──────────────────────────────────────────────
+
+echo "Waiting for Vault pod to be ready..."
+oc wait pod -l app.kubernetes.io/name=vault \
+  -n "${NAMESPACE}" \
+  --for=condition=ready \
+  --timeout=120s
+
+# ── Port-forward to Vault ───────────────────────────────────────────────────
+
+echo "Setting up port-forward to Vault..."
+oc port-forward svc/vault "${VAULT_PORT}:8200" -n "${NAMESPACE}" &
+PF_PID=$!
+trap "kill ${PF_PID} 2>/dev/null || true" EXIT
+sleep 3
+
+export VAULT_ADDR="http://127.0.0.1:${VAULT_PORT}"
+export VAULT_TOKEN="root"
+
+# Verify connectivity
+vault status > /dev/null 2>&1 || { echo "Error: cannot reach Vault at ${VAULT_ADDR}"; exit 1; }
+echo "Connected to Vault at ${VAULT_ADDR}"
+
+# ── Enable KV v2 secrets engine ─────────────────────────────────────────────
+
+echo "Enabling KV v2 secrets engine at 'secret/'..."
+vault secrets enable -path=secret kv-v2 2>/dev/null || echo "  (already enabled)"
+
 # ── Write credentials to Vault KV ───────────────────────────────────────────
 
-echo "✓ Writing secrets to Vault KV path secret/argo-rollouts/kubernetes-agent"
+echo "Writing secrets to secret/argo-rollouts/kubernetes-agent..."
 vault kv put secret/argo-rollouts/kubernetes-agent \
   openai_api_key="${OPENAI_API_KEY}" \
   rem_api_key="${REM_API_KEY:-${OPENAI_API_KEY}}" \
@@ -51,63 +80,41 @@ vault kv put secret/argo-rollouts/kubernetes-agent \
   github_token="${GITHUB_TOKEN}" \
   google_cloud_project="${GOOGLE_CLOUD_PROJECT:-}"
 
-# ── Create the vault-bootstrap-config ConfigMap ──────────────────────────────
+# ── Configure Kubernetes auth ───────────────────────────────────────────────
 
-echo "✓ Creating vault-bootstrap-config ConfigMap"
-kubectl create configmap vault-bootstrap-config \
-  --from-literal=VAULT_ADDR="${VAULT_ADDR}" \
-  -n "${NAMESPACE}" \
-  --dry-run=client -o yaml | kubectl apply -f -
+echo "Enabling Kubernetes auth method..."
+vault auth enable kubernetes 2>/dev/null || echo "  (already enabled)"
 
-# ── Create the vault-admin-token Secret (used only by the bootstrap Job) ────
+echo "Configuring Kubernetes auth..."
+vault write auth/kubernetes/config \
+  kubernetes_host="https://kubernetes.default.svc:443"
 
-echo "✓ Creating vault-admin-token Secret"
-kubectl create secret generic vault-admin-token \
-  --from-literal=token="${VAULT_ADMIN_TOKEN}" \
-  -n "${NAMESPACE}" \
-  --dry-run=client -o yaml | kubectl apply -f -
+echo "Writing kubernetes-agent policy..."
+vault policy write kubernetes-agent - <<'POLICY'
+path "secret/data/argo-rollouts/kubernetes-agent" {
+  capabilities = ["read"]
+}
+POLICY
 
-# ── Delete any previous Job run so we can re-apply cleanly ──────────────────
+echo "Writing kubernetes-agent auth role..."
+vault write auth/kubernetes/role/kubernetes-agent \
+  bound_service_account_names=kubernetes-agent \
+  bound_service_account_namespaces="${NAMESPACE}" \
+  policies=kubernetes-agent \
+  ttl=1h
 
-kubectl delete job vault-bootstrap -n "${NAMESPACE}" --ignore-not-found
-
-# ── Apply and run the bootstrap Job ──────────────────────────────────────────
-
-echo "✓ Applying vault-bootstrap Job"
-kubectl apply -k "$(dirname "$0")"
-
-echo "✓ Waiting for vault-bootstrap Job to complete (timeout 3m)"
-kubectl wait job/vault-bootstrap \
-  --for=condition=complete \
-  --timeout=180s \
-  -n "${NAMESPACE}"
+# ── Done ────────────────────────────────────────────────────────────────────
 
 echo ""
-kubectl logs job/vault-bootstrap -n "${NAMESPACE}"
-
-# ── Clean up the admin token — it is no longer needed ───────────────────────
-
-echo ""
-echo "✓ Deleting vault-admin-token Secret (no longer needed)"
-kubectl delete secret vault-admin-token -n "${NAMESPACE}"
-
-# ── Update VAULT_ADDR in the agent ConfigMap ─────────────────────────────────
-
-echo "✓ Patching kubernetes-agent-config with VAULT_ADDR"
-kubectl patch configmap kubernetes-agent-config \
-  --type merge \
-  -p "{\"data\":{\"VAULT_ADDR\":\"${VAULT_ADDR}\"}}" \
-  -n "${NAMESPACE}"
-
-echo ""
-echo "═══════════════════════════════════════════════════════"
+echo "============================================================"
 echo "Vault bootstrap complete."
 echo ""
-echo "To activate Vault as the credential source, update"
-echo "system/kubernetes-agent/configmap.yaml:"
+echo "Vault KV:   secret/argo-rollouts/kubernetes-agent"
+echo "Auth role:  kubernetes-agent (SA: kubernetes-agent, NS: ${NAMESPACE})"
 echo ""
-echo "  QUARKUS_PROFILE: \"prod,openai,vault\"  # or prod,gemini,vault"
+echo "The Vault Secrets Operator will sync the KV data to K8s"
+echo "Secret 'kubernetes-agent' in namespace '${NAMESPACE}'."
 echo ""
-echo "Then commit, push, and restart the agent:"
-echo "  kubectl rollout restart deployment/kubernetes-agent -n ${NAMESPACE}"
-echo "═══════════════════════════════════════════════════════"
+echo "If VSO is already running, the secret should appear shortly."
+echo "Check with: oc get secret kubernetes-agent -n ${NAMESPACE}"
+echo "============================================================"
