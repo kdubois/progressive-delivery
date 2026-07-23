@@ -6,7 +6,7 @@
 #
 # Prerequisites:
 #   - Vault server running in openshift-gitops (deployed by ArgoCD Helm app)
-#   - vault CLI installed locally
+#   - curl and jq installed locally
 #   - oc / kubectl access to the cluster
 #
 # Usage:
@@ -22,6 +22,19 @@ set -euo pipefail
 
 NAMESPACE="${NAMESPACE:-openshift-gitops}"
 VAULT_PORT="${VAULT_PORT:-8200}"
+VAULT_ADDR="http://127.0.0.1:${VAULT_PORT}"
+VAULT_TOKEN="root"
+
+# ── Helper: call Vault HTTP API ─────────────────────────────────────────────
+
+vault_api() {
+  local method="$1" path="$2"; shift 2
+  curl -sf -X "${method}" \
+    -H "X-Vault-Token: ${VAULT_TOKEN}" \
+    -H "Content-Type: application/json" \
+    "$@" \
+    "${VAULT_ADDR}/v1/${path}"
+}
 
 # ── Validate required inputs ────────────────────────────────────────────────
 
@@ -56,52 +69,60 @@ echo "Setting up port-forward to Vault..."
 oc port-forward svc/vault "${VAULT_PORT}:8200" -n "${NAMESPACE}" &
 PF_PID=$!
 trap "kill ${PF_PID} 2>/dev/null || true" EXIT
-sleep 3
 
-export VAULT_ADDR="http://127.0.0.1:${VAULT_PORT}"
-export VAULT_TOKEN="root"
+echo "Waiting for port-forward to be ready..."
+for i in $(seq 1 15); do
+  if curl -sf "${VAULT_ADDR}/v1/sys/health" > /dev/null 2>&1; then
+    break
+  fi
+  sleep 1
+done
 
-# Verify connectivity
-vault status > /dev/null 2>&1 || { echo "Error: cannot reach Vault at ${VAULT_ADDR}"; exit 1; }
+curl -sf "${VAULT_ADDR}/v1/sys/health" > /dev/null 2>&1 || \
+  { echo "Error: cannot reach Vault at ${VAULT_ADDR}"; exit 1; }
 echo "Connected to Vault at ${VAULT_ADDR}"
 
 # ── Enable KV v2 secrets engine ─────────────────────────────────────────────
 
 echo "Enabling KV v2 secrets engine at 'secret/'..."
-vault secrets enable -path=secret kv-v2 2>/dev/null || echo "  (already enabled)"
+vault_api POST sys/mounts/secret \
+  -d '{"type":"kv","options":{"version":"2"}}' 2>/dev/null \
+  || echo "  (already enabled)"
 
 # ── Write credentials to Vault KV ───────────────────────────────────────────
 
 echo "Writing secrets to secret/argo-rollouts/kubernetes-agent..."
-vault kv put secret/argo-rollouts/kubernetes-agent \
-  openai_api_key="${OPENAI_API_KEY}" \
-  rem_api_key="${REM_API_KEY:-${OPENAI_API_KEY}}" \
-  google_api_key="${GOOGLE_API_KEY:-}" \
-  github_token="${GITHUB_TOKEN}" \
-  google_cloud_project="${GOOGLE_CLOUD_PROJECT:-}"
+vault_api POST secret/data/argo-rollouts/kubernetes-agent \
+  -d "$(jq -n \
+    --arg openai_api_key "${OPENAI_API_KEY}" \
+    --arg rem_api_key "${REM_API_KEY:-${OPENAI_API_KEY}}" \
+    --arg google_api_key "${GOOGLE_API_KEY:-}" \
+    --arg github_token "${GITHUB_TOKEN}" \
+    --arg google_cloud_project "${GOOGLE_CLOUD_PROJECT:-}" \
+    '{data: {openai_api_key: $openai_api_key, rem_api_key: $rem_api_key, google_api_key: $google_api_key, github_token: $github_token, google_cloud_project: $google_cloud_project}}'
+  )" > /dev/null
 
 # ── Configure Kubernetes auth ───────────────────────────────────────────────
 
 echo "Enabling Kubernetes auth method..."
-vault auth enable kubernetes 2>/dev/null || echo "  (already enabled)"
+vault_api POST sys/auth/kubernetes \
+  -d '{"type":"kubernetes"}' 2>/dev/null \
+  || echo "  (already enabled)"
 
 echo "Configuring Kubernetes auth..."
-vault write auth/kubernetes/config \
-  kubernetes_host="https://kubernetes.default.svc:443"
+vault_api POST auth/kubernetes/config \
+  -d '{"kubernetes_host":"https://kubernetes.default.svc:443"}' > /dev/null
 
 echo "Writing kubernetes-agent policy..."
-vault policy write kubernetes-agent - <<'POLICY'
-path "secret/data/argo-rollouts/kubernetes-agent" {
-  capabilities = ["read"]
-}
-POLICY
+vault_api PUT sys/policies/acl/kubernetes-agent \
+  -d '{"policy":"path \"secret/data/argo-rollouts/kubernetes-agent\" { capabilities = [\"read\"] }"}' > /dev/null
 
 echo "Writing kubernetes-agent auth role..."
-vault write auth/kubernetes/role/kubernetes-agent \
-  bound_service_account_names=kubernetes-agent \
-  bound_service_account_namespaces="${NAMESPACE}" \
-  policies=kubernetes-agent \
-  ttl=1h
+vault_api POST auth/kubernetes/role/kubernetes-agent \
+  -d "$(jq -n \
+    --arg ns "${NAMESPACE}" \
+    '{bound_service_account_names: ["kubernetes-agent"], bound_service_account_namespaces: [$ns], policies: ["kubernetes-agent"], ttl: "1h"}'
+  )" > /dev/null
 
 # ── Done ────────────────────────────────────────────────────────────────────
 
@@ -115,6 +136,5 @@ echo ""
 echo "The Vault Secrets Operator will sync the KV data to K8s"
 echo "Secret 'kubernetes-agent' in namespace '${NAMESPACE}'."
 echo ""
-echo "If VSO is already running, the secret should appear shortly."
 echo "Check with: oc get secret kubernetes-agent -n ${NAMESPACE}"
 echo "============================================================"
