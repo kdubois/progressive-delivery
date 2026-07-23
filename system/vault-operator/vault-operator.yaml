@@ -1,12 +1,12 @@
 # Vault operator — installed via the community operators catalog on OpenShift.
-# Sync wave -1 ensures this lands before the Vault CR in wave 0.
+# Lives in its own Argo CD application (system/vault-operator) so it syncs
+# and installs its CRDs before the system/vault application attempts to apply
+# the Vault CR.
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
   name: vault-operator
-  namespace: openshift-operators  # must stay in openshift-operators, not openshift-gitops
-  annotations:
-    argocd.argoproj.io/sync-wave: "-1"
+  namespace: openshift-operators
 spec:
   channel: stable
   installPlanApproval: Automatic
