@@ -22,7 +22,7 @@ data:
   
   # Profile selection - set to 'prod,openai' or 'prod,gemini'
   # Add ',vault' to read credentials from Vault instead of the K8s Secret
-  QUARKUS_PROFILE: "prod,openai"
+  QUARKUS_PROFILE: "prod,openai,vault"
 
-  # Vault URL (uncomment when using the vault profile)
-  # VAULT_ADDR: "http://vault.openshift-gitops.svc.cluster.local:8200"
+  # Vault URL
+  VAULT_ADDR: "http://vault.openshift-gitops.svc.cluster.local:8200"
