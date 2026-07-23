@@ -18,7 +18,8 @@ spec:
       serviceAccountName: kubernetes-agent
       containers:
         - name: agent
-          image: quay.io/kevindubois/kubernetes-agent:latest
+          image: ghcr.io/kdubois/kubernetes-agent:pr-46
+          #image: quay.io/kevindubois/kubernetes-agent:latest
           #image: ghcr.io/kdubois/kubernetes-agent:main
           imagePullPolicy: Always # change to IfNotPresent when using a fixed version
           ports:
@@ -54,6 +55,7 @@ spec:
                 secretKeyRef:
                   name: kubernetes-agent
                   key: github_token
+                  optional: true
             - name: GOOGLE_CLOUD_PROJECT
               valueFrom:
                 secretKeyRef:

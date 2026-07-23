@@ -35,43 +35,44 @@ Fork this repository and update the ApplicationSet configurations in [`component
 
 ### Configure Secrets (Before Deployment)
 
-Before deploying the stack, you must create the Kubernetes agent secret manually in your cluster. The secret is **not managed by GitOps** because it contains sensitive credentials.
+The Kubernetes agent secret is **not managed by GitOps** because it contains sensitive credentials. Two paths are supported:
+
+#### Option A — Kubernetes Secret (default, no Vault required)
 
 ```shell
-# Copy the template to create your secret file
+# Copy the template and fill in your credentials
 cp system/kubernetes-agent/secret.yaml.template system/kubernetes-agent/secret.yaml
-
-# Edit with your actual credentials
 vim system/kubernetes-agent/secret.yaml
 
-# Apply the secret directly to your cluster
+# Apply to your cluster
 kubectl apply -f system/kubernetes-agent/secret.yaml
 ```
 
-**Important:** The `secret.yaml` file is git-ignored for security. You must create this secret in your cluster before or right after deploying via Argo CD.
-
-The secret template expects these values:
+The template expects these values:
 
 ```yaml
 stringData:
   openai_api_key: sk-...           # Required for OpenAI-compatible models
-  rem_api_key: sk-...              # Optional, for remediation agent (defaults to openai_api_key)
-  google_api_key: ...              # Optional, for Gemini-based setups
+  rem_api_key: sk-...              # Optional — defaults to openai_api_key
+  google_api_key: ...              # Optional — for Gemini-based setups
   github_token: ghp_...            # Required for GitHub PR/issue creation
   google_cloud_project: ...        # Optional
 ```
-
-**Credential notes:**
-- `OPENAI_API_KEY`: required when using the default OpenAI-compatible configuration
-- `REM_API_KEY`: optional unless you want separate credentials for remediation/code-fix flows (defaults to `OPENAI_API_KEY`)
-- `GOOGLE_API_KEY`: optional, used for Gemini-based setups
-- `GITHUB_TOKEN`: required if you want automatic GitHub issue or PR creation
-- `GOOGLE_CLOUD_PROJECT`: optional
 
 **Where to obtain credentials:**
 - Google API key: https://aistudio.google.com/app/apikey
 - OpenAI API key: https://platform.openai.com/api-keys
 - GitHub token: https://github.com/settings/tokens (requires `repo` scope)
+
+#### Option B — Vault (opt-in)
+
+If you have a HashiCorp Vault instance, the agent can read all credentials from a Vault KV path at startup instead of from the Kubernetes Secret. Run the [bootstrap script](#vault-path-only-run-the-bootstrap-script) below, then activate it by adding `vault` to the profile in [`system/kubernetes-agent/configmap.yaml`](system/kubernetes-agent/configmap.yaml):
+
+```yaml
+QUARKUS_PROFILE: "prod,openai,vault"   # or prod,gemini,vault
+```
+
+**Important:** `secret.yaml` is git-ignored. Create the secret before or right after deploying via Argo CD.
 
 ### Deploy the Stack
 
@@ -79,7 +80,7 @@ Now that secrets are configured, deploy the full stack.
 
 #### Option 1: Cluster does not already have Argo CD
 
-Deploy the full stack, including OpenShift GitOps:
+Deploy the full stack, including OpenShift GitOps and the Vault operator:
 
 ```shell
 until oc apply -k bootstrap/overlays/default/; do sleep 15; done
@@ -98,9 +99,51 @@ See [`DEPLOYMENT_EXISTING_ARGOCD.md`](DEPLOYMENT_EXISTING_ARGOCD.md) for the ful
 These commands retry until successful, as some resources depend on operators being installed first. The deployment includes:
 
 - OpenShift GitOps (Argo CD) when using [`bootstrap/overlays/default`](bootstrap/overlays/default/kustomization.yaml)
+- HashiCorp Vault operator + Vault instance (`system/vault/`)
 - Argo Rollouts with AI metrics plugin
-- Kubernetes agent for AI analysis (with secret auto-generated from your `secrets.env`)
+- Kubernetes agent for AI analysis
 - Sample Quarkus application with canary configuration
+
+#### Vault path only: run the bootstrap script
+
+Once the stack is up and Vault is ready, run the one-time bootstrap script to configure Kubernetes auth, write your credentials to the Vault KV path, and activate the Vault profile:
+
+```shell
+# Wait for Vault to be ready
+oc wait pod -l app.kubernetes.io/name=vault -n openshift-gitops \
+  --for=condition=ready --timeout=120s
+
+export VAULT_ADDR="http://$(oc get svc vault -n openshift-gitops -o jsonpath='{.spec.clusterIP}'):8200"
+export VAULT_ADMIN_TOKEN="$(oc get secret vault-unseal-keys -n openshift-gitops \
+  -o jsonpath='{.data.vault-root}' | base64 -d)"
+export OPENAI_API_KEY="sk-..."
+export GITHUB_TOKEN="ghp_..."
+# export GOOGLE_API_KEY="..."   # if using Gemini
+# export REM_API_KEY="..."      # optional, defaults to OPENAI_API_KEY
+
+./bootstrap/vault/vault-bootstrap.sh
+```
+
+The script:
+1. Writes your credentials to `secret/argo-rollouts/kubernetes-agent` in Vault
+2. Configures Vault Kubernetes auth so the agent pod can authenticate
+3. Runs the in-cluster `vault-bootstrap` Job to set the policy and auth role
+4. Patches `kubernetes-agent-config` with `VAULT_ADDR`
+5. Cleans up the admin token Secret
+
+After it completes, update `system/kubernetes-agent/configmap.yaml` with the Vault profile and address, then commit and push so Argo CD keeps the values on sync:
+
+```yaml
+QUARKUS_PROFILE: "prod,openai,vault"   # or prod,gemini,vault
+VAULT_ADDR: "http://vault.openshift-gitops.svc.cluster.local:8200"
+```
+
+```shell
+git add system/kubernetes-agent/configmap.yaml
+git commit -m "chore: activate Vault credential source"
+git push
+oc rollout restart deployment/kubernetes-agent -n openshift-gitops
+```
 
 ### Verify Deployment
 
@@ -381,11 +424,17 @@ oc logs deployment/kubernetes-agent -n openshift-gitops | grep -i "fetching logs
 ### API Key Issues
 
 ```shell
-# Verify secret exists and contains keys
+# Verify secret exists and contains keys (K8s Secret path)
 oc get secret kubernetes-agent -n openshift-gitops -o yaml
 
 # Check agent logs for authentication errors
 oc logs deployment/kubernetes-agent -n openshift-gitops | grep -i "auth\|api key"
+```
+
+If you are using the Vault path (`prod,openai,vault` profile), the secret will not exist — check Vault connectivity instead:
+
+```shell
+oc logs deployment/kubernetes-agent -n openshift-gitops | grep -i "vault"
 ```
 
 ### Enable Debug Logging
@@ -406,12 +455,18 @@ oc logs -f deployment/kubernetes-agent -n openshift-gitops
 
 ### Switching AI Models
 
-Edit the agent secret to switch between Gemini and OpenAI:
+Update `QUARKUS_PROFILE` in the ConfigMap:
 
 ```shell
-oc edit secret kubernetes-agent -n openshift-gitops
+# Switch to Gemini
+oc patch configmap kubernetes-agent-config -n openshift-gitops \
+  --type merge -p '{"data":{"QUARKUS_PROFILE":"prod,gemini"}}'
 
-# Restart agent to apply changes
+# Switch to OpenAI
+oc patch configmap kubernetes-agent-config -n openshift-gitops \
+  --type merge -p '{"data":{"QUARKUS_PROFILE":"prod,openai"}}'
+
+# Restart agent to apply
 oc rollout restart deployment/kubernetes-agent -n openshift-gitops
 ```
 

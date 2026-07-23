@@ -1,0 +1,61 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vault-bootstrap
+spec:
+  # Rerun manually if needed by deleting the completed Job and re-applying.
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      serviceAccountName: default
+      restartPolicy: OnFailure
+      containers:
+      - name: vault-init
+        image: hashicorp/vault:1.19
+        env:
+        - name: VAULT_ADDR
+          valueFrom:
+            configMapKeyRef:
+              name: vault-bootstrap-config
+              key: VAULT_ADDR
+        - name: VAULT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: vault-admin-token   # created by vault-bootstrap.sh, deleted after Job completes
+              key: token
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -e
+
+          echo "=== Configuring Vault Kubernetes auth method ==="
+
+          # Enable Kubernetes auth (idempotent)
+          vault auth enable kubernetes 2>/dev/null || echo "Kubernetes auth already enabled"
+
+          # Configure Kubernetes auth to use the in-cluster API server.
+          # On OpenShift the API server CA may differ; uncomment the ca_cert line
+          # if Vault cannot verify the API server TLS certificate.
+          vault write auth/kubernetes/config \
+            kubernetes_host="https://kubernetes.default.svc"
+          #   kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+
+          echo "=== Writing kubernetes-agent policy ==="
+          vault policy write kubernetes-agent - <<'EOF'
+          path "secret/data/argo-rollouts/kubernetes-agent" {
+            capabilities = ["read"]
+          }
+          EOF
+
+          echo "=== Writing kubernetes-agent auth role ==="
+          vault write auth/kubernetes/role/kubernetes-agent \
+            bound_service_account_names=kubernetes-agent \
+            bound_service_account_namespaces=openshift-gitops \
+            policies=kubernetes-agent \
+            ttl=1h
+
+          echo "=== Vault bootstrap complete ==="
+          echo "Next: write secrets to Vault KV path secret/data/argo-rollouts/kubernetes-agent"
+          echo "  vault kv put secret/argo-rollouts/kubernetes-agent \\"
+          echo "    openai_api_key=... google_api_key=... github_token=... ..."

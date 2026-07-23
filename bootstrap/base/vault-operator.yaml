@@ -1,0 +1,14 @@
+# Vault operator — installed via the community operators catalog on OpenShift.
+# This installs the HashiCorp Vault operator which manages Vault instances
+# as VaultServer custom resources in the cluster.
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: vault-operator
+  namespace: openshift-operators
+spec:
+  channel: stable
+  installPlanApproval: Automatic
+  name: vault-operator
+  source: community-operators
+  sourceNamespace: openshift-marketplace

@@ -12,6 +12,7 @@ spec:
       - path: system/kubernetes-agent
       - path: system/progressive-delivery-controller
       - path: system/gitops-controller-existing-argocd
+      - path: system/vault
   template:
     metadata:
       name: '{{path.basename}}'
