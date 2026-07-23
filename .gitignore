@@ -1,3 +1,4 @@
 *secret.yaml
+!vault-static-secret.yaml
 secrets.env
 .env
