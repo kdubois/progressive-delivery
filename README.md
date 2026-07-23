@@ -83,20 +83,22 @@ Now that secrets are configured, deploy the full stack.
 Deploy the full stack, including OpenShift GitOps and the Vault operator:
 
 ```shell
-until oc apply -k bootstrap/overlays/default/; do sleep 15; done
+./bootstrap/bootstrap.sh
 ```
+
+The script installs the operators first, waits for their CRDs to become established, then applies the Argo CD instance, AppProjects, and ApplicationSets.
 
 #### Option 2: Cluster already has a shared `openshift-gitops` Argo CD
 
 Reuse the existing Argo CD instance without installing the GitOps operator or replacing the `ArgoCD` resource:
 
 ```shell
-until oc apply -k bootstrap/overlays/existing-argocd/; do sleep 15; done
+./bootstrap/bootstrap.sh existing-argocd
 ```
 
 See [`DEPLOYMENT_EXISTING_ARGOCD.md`](DEPLOYMENT_EXISTING_ARGOCD.md) for the full reproducible procedure and verification steps.
 
-These commands retry until successful, as some resources depend on operators being installed first. The deployment includes:
+The deployment includes:
 
 - OpenShift GitOps (Argo CD) when using [`bootstrap/overlays/default`](bootstrap/overlays/default/kustomization.yaml)
 - HashiCorp Vault operator + Vault instance (`system/vault/`)

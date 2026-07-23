@@ -3,4 +3,3 @@ kind: Kustomization
 
 resources:
 - openshift-gitops-operator.yaml
-- vault-operator.yaml
