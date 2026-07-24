@@ -18,9 +18,8 @@ spec:
       serviceAccountName: kubernetes-agent
       containers:
         - name: agent
-          image: ghcr.io/kdubois/kubernetes-agent:pr-46
           #image: quay.io/kevindubois/kubernetes-agent:latest
-          #image: ghcr.io/kdubois/kubernetes-agent:main
+          image: ghcr.io/kdubois/kubernetes-agent:main
           imagePullPolicy: Always # change to IfNotPresent when using a fixed version
           ports:
             - containerPort: 8080
