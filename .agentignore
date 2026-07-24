@@ -1,3 +1,9 @@
+# secret.yaml is a local-only credentials file derived from secret.yaml.template.
+# It is never committed and never managed by GitOps.
+# The deployed stack uses Vault: bootstrap/vault/vault-bootstrap.sh writes credentials
+# to Vault KV v2, and the VaultStaticSecret CR (system/vault-config/vault-static-secret.yaml)
+# syncs them to the kubernetes-agent K8s Secret automatically.
+# secret.yaml.template IS tracked and defines the expected secret keys — keep it in sync.
 **/secret.yaml
 **/*.env
 **/secrets.env

@@ -78,17 +78,26 @@ kubectl apply -k bootstrap/overlays/existing-argocd/
 
 The agent secret is **not** managed by GitOps. Two paths are supported:
 
-**K8s Secret path (default):**
+**Vault path (standard):** Run `bootstrap/vault/vault-bootstrap.sh` with the new credentials. It writes them to `secret/argo-rollouts/kubernetes-agent` in Vault KV v2. The Vault Secrets Operator (`VaultStaticSecret` in `system/vault-config/`) syncs the KV data to the `kubernetes-agent` K8s Secret within `refreshAfter: 300s` and automatically restarts the agent Deployment.
+
+```bash
+export ANALYSIS_API_KEY="..."
+export GITHUB_TOKEN="ghp_..."
+# Optional: export REMEDIATION_API_KEY="..." (defaults to ANALYSIS_API_KEY)
+./bootstrap/vault/vault-bootstrap.sh
+```
+
+To update credentials later, simply re-run the script with the new values — it is idempotent.
+
+**Plain K8s Secret path (bypass / no Vault):** For environments without Vault, copy the template, fill in credentials, and apply directly:
 
 ```bash
 cp system/kubernetes-agent/secret.yaml.template system/kubernetes-agent/secret.yaml
-# Fill in: openai_api_key, google_api_key, github_token
+# Fill in ANALYSIS_API_KEY, REMEDIATION_API_KEY, GITHUB_TOKEN
 kubectl apply -f system/kubernetes-agent/secret.yaml -n openshift-gitops
 ```
 
-**Vault path (default for deployed stack):** Run `bootstrap/vault/vault-bootstrap.sh` (see the [README](README.md#vault-bootstrap)) to write credentials to Vault. The Vault Secrets Operator syncs them to the `kubernetes-agent` K8s Secret automatically.
-
-`secret.yaml` is git-ignored. Never commit credentials.
+`secret.yaml` is git-ignored (`.agentignore` + `.gitignore`). Never commit credentials.
 
 ## Making Changes
 

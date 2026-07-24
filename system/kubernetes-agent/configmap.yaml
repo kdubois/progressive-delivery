@@ -5,8 +5,11 @@ metadata:
   namespace: openshift-gitops
 data:
   # Analysis model configuration (any OpenAI-compatible endpoint)
-  ANALYSIS_MODEL: Qwen3.6-35B-A3B
-  ANALYSIS_BASE_URL: https://litemaas.rhoai.rh-aiservices-bu.com/v1
+  #ANALYSIS_MODEL: Qwen3.6-35B-A3B
+  #ANALYSIS_BASE_URL: https://litemaas.rhoai.rh-aiservices-bu.com/v1
+  ANALYSIS_MODEL: gemini-2.5-flash
+  ANALYSIS_BASE_URL: https://generativelanguage.googleapis.com/v1beta/openai/
+
 
   # Remediation model configuration
   REMEDIATION_MODEL: gemini-2.5-flash
