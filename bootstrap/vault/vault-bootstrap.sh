@@ -10,9 +10,9 @@
 #   - oc / kubectl access to the cluster
 #
 # Usage:
-#   export OPENAI_API_KEY="sk-..."
+#   export ANALYSIS_API_KEY="sk-..."
 #   export GITHUB_TOKEN="ghp_..."
-#   # Optional: REM_API_KEY, GOOGLE_API_KEY, GOOGLE_CLOUD_PROJECT
+#   # Optional: REMEDIATION_API_KEY
 #   ./bootstrap/vault/vault-bootstrap.sh
 #
 # The script port-forwards to Vault automatically. No admin token is
@@ -38,7 +38,7 @@ vault_api() {
 
 # ── Validate required inputs ────────────────────────────────────────────────
 
-REQUIRED_VARS=(OPENAI_API_KEY GITHUB_TOKEN)
+REQUIRED_VARS=(ANALYSIS_API_KEY GITHUB_TOKEN)
 MISSING=()
 for var in "${REQUIRED_VARS[@]}"; do
   [[ -z "${!var:-}" ]] && MISSING+=("$var")
@@ -49,7 +49,7 @@ if [[ ${#MISSING[@]} -gt 0 ]]; then
   printf '  %s\n' "${MISSING[@]}"
   echo ""
   echo "Usage:"
-  echo "  export OPENAI_API_KEY=sk-..."
+  echo "  export ANALYSIS_API_KEY=sk-..."
   echo "  export GITHUB_TOKEN=ghp_..."
   echo "  ./bootstrap/vault/vault-bootstrap.sh"
   exit 1
@@ -94,12 +94,10 @@ vault_api POST sys/mounts/secret \
 echo "Writing secrets to secret/argo-rollouts/kubernetes-agent..."
 vault_api POST secret/data/argo-rollouts/kubernetes-agent \
   -d "$(jq -n \
-    --arg openai_api_key "${OPENAI_API_KEY}" \
-    --arg rem_api_key "${REM_API_KEY:-${OPENAI_API_KEY}}" \
-    --arg google_api_key "${GOOGLE_API_KEY:-}" \
+    --arg analysis_api_key "${ANALYSIS_API_KEY}" \
+    --arg remediation_api_key "${REMEDIATION_API_KEY:-${ANALYSIS_API_KEY}}" \
     --arg github_token "${GITHUB_TOKEN}" \
-    --arg google_cloud_project "${GOOGLE_CLOUD_PROJECT:-}" \
-    '{data: {openai_api_key: $openai_api_key, rem_api_key: $rem_api_key, google_api_key: $google_api_key, github_token: $github_token, google_cloud_project: $google_cloud_project}}'
+    '{data: {analysis_api_key: $analysis_api_key, remediation_api_key: $remediation_api_key, github_token: $github_token}}'
   )" > /dev/null
 
 # ── Configure Kubernetes auth ───────────────────────────────────────────────

@@ -71,7 +71,7 @@ The stack includes HashiCorp Vault (deployed via the official Helm chart) and th
 After the stack is deployed, run the one-time [bootstrap script](#vault-bootstrap) to write credentials and configure Kubernetes auth:
 
 ```shell
-export OPENAI_API_KEY="sk-..."
+export ANALYSIS_API_KEY="sk-..."
 export GITHUB_TOKEN="ghp_..."
 ./bootstrap/vault/vault-bootstrap.sh
 ```
@@ -117,10 +117,9 @@ The deployment includes:
 Once the stack is up and Vault is ready, run the one-time bootstrap script to write credentials and configure Kubernetes auth. The script handles port-forwarding automatically:
 
 ```shell
-export OPENAI_API_KEY="sk-..."
+export ANALYSIS_API_KEY="sk-..."
 export GITHUB_TOKEN="ghp_..."
-# export REM_API_KEY="..."          # optional, defaults to OPENAI_API_KEY
-# export GOOGLE_API_KEY="..."       # if using Gemini
+# export REMEDIATION_API_KEY="..."    # optional, defaults to ANALYSIS_API_KEY
 
 ./bootstrap/vault/vault-bootstrap.sh
 ```
@@ -317,39 +316,33 @@ Model and endpoint configuration is managed in [`system/kubernetes-agent/configm
 
 ```yaml
 data:
-  # OpenAI-compatible model configuration (default)
-  OPENAI_BASE_URL: "https://litellm-prod.apps.maas.redhatworkshops.io/v1"
-  OPENAI_MODEL: "qwen3-14b"
+  # Analysis model configuration (any OpenAI-compatible endpoint)
+  ANALYSIS_BASE_URL: "https://litellm-prod.apps.maas.redhatworkshops.io/v1"
+  ANALYSIS_MODEL: "qwen3-14b"
   
   # Remediation model configuration (used for code fixes)
-  REM_BASE_URL: "https://api.openai.com/v1"
-  REM_MODEL: "gpt-4o"
+  REMEDIATION_BASE_URL: "https://api.openai.com/v1"
+  REMEDIATION_MODEL: "gpt-4o"
   
-  # Gemini model configuration
-  GEMINI_MODEL: "gemini-2.5-flash"
-  
-  # Profile selection - determines which AI provider to use
-  QUARKUS_PROFILE: "prod,openai"  # or "prod,gemini"
+  QUARKUS_PROFILE: "prod"
 ```
 
 **Configuration parameters:**
-- `OPENAI_MODEL`: Model name for OpenAI-compatible endpoints (default: `qwen3-14b`)
-- `OPENAI_BASE_URL`: Base URL for OpenAI-compatible API (can point to LiteLLM, vLLM, or OpenAI)
-- `GEMINI_MODEL`: Gemini model name when using Gemini profile (default: `gemini-2.5-flash`)
-- `REM_MODEL`: Model used specifically by the remediation agent for code fixes (default: `gpt-4o`)
-- `REM_BASE_URL`: Base URL for remediation model API
-- `QUARKUS_PROFILE`: Set to `prod,openai` or `prod,gemini` to switch between AI providers
+- `ANALYSIS_MODEL`: Model name for the analysis agent (any OpenAI-compatible model)
+- `ANALYSIS_BASE_URL`: Base URL for analysis model API (can point to LiteLLM, vLLM, Gemini, or OpenAI)
+- `REMEDIATION_MODEL`: Model used by the remediation agent for code fixes (defaults to ANALYSIS_MODEL)
+- `REMEDIATION_BASE_URL`: Base URL for remediation model API (defaults to ANALYSIS_BASE_URL)
 
 To switch between AI providers, edit the ConfigMap:
 
 ```shell
-# Switch to Gemini
+# Switch to Gemini (via OpenAI-compatible endpoint)
 oc patch configmap kubernetes-agent-config -n openshift-gitops \
-  --type merge -p '{"data":{"QUARKUS_PROFILE":"prod,gemini"}}'
+  --type merge -p '{"data":{"ANALYSIS_BASE_URL":"https://generativelanguage.googleapis.com/v1beta/openai/","ANALYSIS_MODEL":"gemini-2.5-flash"}}'
 
-# Switch to OpenAI
+# Switch to a local vLLM/LiteLLM endpoint
 oc patch configmap kubernetes-agent-config -n openshift-gitops \
-  --type merge -p '{"data":{"QUARKUS_PROFILE":"prod,openai"}}'
+  --type merge -p '{"data":{"ANALYSIS_BASE_URL":"http://vllm-service:8000/v1","ANALYSIS_MODEL":"qwen3-14b"}}'
 
 # Restart agent to apply changes
 oc rollout restart deployment/kubernetes-agent -n openshift-gitops
