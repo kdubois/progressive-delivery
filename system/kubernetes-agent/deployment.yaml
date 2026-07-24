@@ -31,35 +31,23 @@ spec:
                 name: kubernetes-agent-config
           env:
             # Sensitive data from secrets
-            - name: OPENAI_API_KEY
+            - name: ANALYSIS_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: kubernetes-agent
-                  key: openai_api_key
+                  key: analysis_api_key
                   optional: true
-            - name: REM_API_KEY
+            - name: REMEDIATION_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: kubernetes-agent
-                  key: rem_api_key
-                  optional: true
-            - name: GOOGLE_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: kubernetes-agent
-                  key: google_api_key
+                  key: remediation_api_key
                   optional: true
             - name: GITHUB_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: kubernetes-agent
                   key: github_token
-                  optional: true
-            - name: GOOGLE_CLOUD_PROJECT
-              valueFrom:
-                secretKeyRef:
-                  name: kubernetes-agent
-                  key: google_cloud_project
                   optional: true
             # Git Configuration
             - name: GIT_USERNAME
@@ -90,4 +78,3 @@ spec:
             timeoutSeconds: 3
             failureThreshold: 3
       restartPolicy: Always
-

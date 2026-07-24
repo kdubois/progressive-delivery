@@ -4,22 +4,12 @@ metadata:
   name: kubernetes-agent-config
   namespace: openshift-gitops
 data:
-  # Default model configuration (qwen3-14b via LiteLLM)
-  #OPENAI_MODEL: deepseek-r1-distill-qwen-14b
-  #OPENAI_BASE_URL: https://litellm-prod.apps.maas.redhatworkshops.io/v1
-  OPENAI_MODEL: Qwen3.6-35B-A3B
-  OPENAI_BASE_URL: https://litemaas.rhoai.rh-aiservices-bu.com/v1
+  # Analysis model configuration (any OpenAI-compatible endpoint)
+  ANALYSIS_MODEL: Qwen3.6-35B-A3B
+  ANALYSIS_BASE_URL: https://litemaas.rhoai.rh-aiservices-bu.com/v1
 
   # Remediation model configuration
-  #REM_BASE_URL: "https://api.openai.com/v1"
-  #REM_MODEL: "gpt-4o"
+  REMEDIATION_MODEL: gemini-2.5-flash
+  REMEDIATION_BASE_URL: https://generativelanguage.googleapis.com/v1beta/openai/
 
-  REM_MODEL: Qwen3.6-35B-A3B
-  REM_BASE_URL: https://litemaas.rhoai.rh-aiservices-bu.com/v1
-  
-  # Gemini model configuration
-  GEMINI_MODEL: "gemini-2.5-flash"
-  
-  # Profile selection - set to 'prod,openai' or 'prod,gemini'
-  # Credentials are synced from Vault to a K8s Secret by the Vault Secrets Operator
-  QUARKUS_PROFILE: "prod,openai"
+  QUARKUS_PROFILE: "prod"
