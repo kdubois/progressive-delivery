@@ -338,7 +338,7 @@ To switch between AI providers, edit the ConfigMap:
 ```shell
 # Switch to Gemini (via OpenAI-compatible endpoint)
 oc patch configmap kubernetes-agent-config -n openshift-gitops \
-  --type merge -p '{"data":{"ANALYSIS_BASE_URL":"https://generativelanguage.googleapis.com/v1beta/openai/","ANALYSIS_MODEL":"gemini-2.5-flash"}}'
+  --type merge -p '{"data":{"ANALYSIS_BASE_URL":"https://generativelanguage.googleapis.com/v1beta/openai/","ANALYSIS_MODEL":"gemini-3.5-flash"}}'
 
 # Switch to a local vLLM/LiteLLM endpoint
 oc patch configmap kubernetes-agent-config -n openshift-gitops \
