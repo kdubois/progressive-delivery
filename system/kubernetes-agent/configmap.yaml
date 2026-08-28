@@ -12,7 +12,7 @@ data:
 
 
   # Remediation model configuration
-  REMEDIATION_MODEL: Qwen3.6-35B-A3B
+  REMEDIATION_MODEL: Qwen3.8-27B
   REMEDIATION_BASE_URL: https://litemaas.rhoai.rh-aiservices-bu.com/v1
   #REMEDIATION_MODEL: gemini-2.5-flash
   #REMEDIATION_BASE_URL: https://generativelanguage.googleapis.com/v1beta/openai/
