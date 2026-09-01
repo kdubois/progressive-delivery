@@ -1,6 +1,8 @@
 # Progressive Delivery with Argo Rollouts and AI-Powered Analysis
 
-This repository demonstrates progressive delivery with OpenShift GitOps using Argo Rollouts with an AI-powered metrics plugin for automated canary analysis. The setup includes a complete GitOps workflow with Argo CD, OpenShift Routes for traffic management, and an autonomous Kubernetes agent that analyzes deployments using AI.
+This repository demonstrates progressive delivery with Argo CD and Argo Rollouts with an AI-powered metrics plugin for automated canary analysis. The setup includes a complete GitOps workflow on OpenShift with OpenShift GitOps, OpenShift Routes for traffic management, and an autonomous Kubernetes agent that analyzes deployments using AI.
+
+> **Not on OpenShift?** See [Running on vanilla Kubernetes](#running-on-vanilla-kubernetes) at the bottom of this page.
 
 ## Overview
 
@@ -61,7 +63,6 @@ The bootstrap script deploys the full stack and then optionally configures a Has
 ./bootstrap/bootstrap.java --overlay existing-argocd
 ```
 
-See [`DEPLOYMENT_EXISTING_ARGOCD.md`](DEPLOYMENT_EXISTING_ARGOCD.md) for full details on the existing-argocd path.
 
 Flow of the script:
 1. Prompt for your AI API key, remediation API key (optional), and GitHub token
@@ -259,6 +260,20 @@ oc logs deployment/kubernetes-agent -n openshift-gitops | grep -i "fetching logs
 oc set env deployment/argo-rollouts LOG_LEVEL=debug -n openshift-gitops
 oc set env deployment/kubernetes-agent QUARKUS_LOG_LEVEL=DEBUG -n openshift-gitops
 ```
+
+## Running on vanilla Kubernetes
+
+The bootstrap script and manifests target OpenShift. The following components need to be adapted for a plain Kubernetes cluster:
+
+| OpenShift component | Vanilla Kubernetes equivalent |
+|---|---|
+| OpenShift GitOps Operator (`Subscription`) | [Argo CD operator](https://github.com/argoproj-labs/argocd-operator) or [Helm chart](https://github.com/argoproj/argo-helm/tree/main/charts/argo-cd) |
+| `RolloutManager` CRD (from the operator) | [Argo Rollouts operator](https://operatorhub.io/operator/argo-rollouts) or [Helm chart](https://github.com/argoproj/argo-helm/tree/main/charts/argo-rollouts) |
+| Vault Secrets Operator (`Subscription`) | [VSO Helm chart](https://developer.hashicorp.com/vault/docs/deploy/kubernetes/vso/installation) or a plain `Secret` with `--skip-vault` |
+| `route.openshift.io/v1` `Route` | Kubernetes `HTTPRoute` (Gateway API) |
+| `argoproj-labs/openshift` traffic plugin | [`argoproj-labs/gatewayAPI` plugin](https://github.com/argoproj-labs/rollouts-plugin-trafficrouter-gateway) |
+
+After replacing those resources, all other manifests (RBAC, the agent deployment, the `AnalysisTemplate`, the `Rollout` steps) are standard Kubernetes and require no changes. The namespaces `openshift-gitops` and `quarkus-demo` are arbitrary so you can rename them to whatever suits your environment.
 
 ## Additional resources
 

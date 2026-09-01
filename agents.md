@@ -49,8 +49,6 @@ workloads/
       scenario-2-null-pointer/       # NPE bug image
       scenario-3-memory-leak/        # Memory leak image
   canary-app/                        # Alternate demo (argoproj/rollouts-demo)
-
-validate-deployment.sh               # Deployment health checks
 ```
 
 ## Namespace Layout
@@ -113,9 +111,6 @@ Update the image tag in the desired overlay's `kustomization.yaml`, then push:
 ## Verifying the Stack
 
 ```bash
-./validate-deployment.sh
-
-# Individual checks
 kubectl get pods -n openshift-gitops
 kubectl get pods -n quarkus-demo
 oc argo rollouts list rollouts -n quarkus-demo
