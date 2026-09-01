@@ -16,6 +16,8 @@ Kubernetes Agent (Quarkus + LangChain4j)
 Application Pods (stable + canary)
 ```
 
+![Full architecture](full-architecture.png)
+
 ## Prerequisites
 
 - OpenShift cluster v4.20 or later
