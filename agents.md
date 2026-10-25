@@ -48,6 +48,7 @@ workloads/
       scenario-1-stable/             # Happy path image
       scenario-2-null-pointer/       # NPE bug image
       scenario-3-memory-leak/        # Memory leak image
+      scenario-4-latency/            # Progressive latency regression image
   canary-app/                        # Alternate demo (argoproj/rollouts-demo)
 ```
 

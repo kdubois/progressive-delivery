@@ -33,7 +33,7 @@ spec:
         labels:
           role: canary
       analysis:
-        startingStep: 2 # delay starting analysis run until we have collected enough metrics
+        startingStep: 1 # first analysis fires during the initial pause, once the canary is Ready and serving traffic
         args:
         - name: service-name
           value: rollouts-demo-canary.canary.svc.cluster.local
