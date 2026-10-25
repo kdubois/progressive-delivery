@@ -58,9 +58,9 @@ spec:
             - rollouts-demo
       steps:
       - setWeight: 10
-      - pause: { duration: 20s } # 20 seconds to start gathering metrics before starting analysis
+      - pause: { duration: 20s } # canary serves 10% traffic; first AI analysis fires here (5s initial delay)
       - setWeight: 30
-      - pause: { duration: 60s } # 60 seconds to let the analysis do its job
+      - pause: { duration: 60s } # both analyses complete during this window (at 10% and 30% weight)
       - setWeight: 60
       - pause: { duration: 20s } # if everything is going well, continue rolling out
       - setWeight: 100
