@@ -32,4 +32,10 @@ spec:
             baseBranch: main
             # Optional: Additional context for AI analysis
             extraPrompt: "Ignore color changes."
+            # Optional: pause the rollout for human review when the analysis
+            # promotes with confidence below the threshold. The measurement
+            # stays successful; the pause holds the rollout until a human
+            # runs `oc argo rollouts unpause` or aborts.
+            #pauseOnUncertainty: true
+            #uncertaintyThreshold: 50
 
