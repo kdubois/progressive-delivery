@@ -13,6 +13,12 @@ spec:
     value: app=rollouts-demo,role=canary
   metrics:
     - name: ai-analysis
+      failureLimit: 0
+      # Recurring analysis: one measurement early in the rollout (log-visible bugs)
+      # and one later when metrics have accumulated (weight-aware thresholds)
+      count: 2
+      interval: 30s
+      initialDelay: 5s
       provider:
         plugin:
           argoproj-labs/metric-ai:
