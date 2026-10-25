@@ -156,12 +156,12 @@ You should see the sample Quarkus application dashboard showing the current depl
 
 ### Trigger a rollout
 
-Edit the image tag in [`workloads/quarkus-rollouts-demo/base/rollouts.yaml`](workloads/quarkus-rollouts-demo/base/rollouts.yaml), commit, and push. Argo CD detects the change and starts the rollout.
+Edit the image tag in [`workloads/quarkus-rollouts-demo/base/rollout.yaml`](workloads/quarkus-rollouts-demo/base/rollout.yaml), commit, and push. Argo CD detects the change and starts the rollout.
 
 e.g. 
 ```shell
 # Example: change from version 1.0.0 to 1.0.1
-sed -i 's/main/v1.stable/g' workloads/quarkus-rollouts-demo/base/rollouts.yaml
+sed -i 's/main/v1.stable/g' workloads/quarkus-rollouts-demo/base/rollout.yaml
 
 # Commit and push
 git add .
@@ -172,7 +172,7 @@ git push
 oc argo rollouts get rollout quarkus-demo -n quarkus-demo --watch
 ```
 
-During each canary step the plugin sends logs to the agent, which returns a promote or abort decision.
+During the rollout the plugin sends logs, metrics, and rollout status to the agent twice — once early at low canary weight, once later once metrics have accumulated — and each analysis returns a promote or abort decision.
 
 ```shell
 # List analysis runs
@@ -184,10 +184,10 @@ oc get analysisrun <name> -n quarkus-demo -o yaml
 
 ### Test auto-rollback
 
-The sample application ships several pre-built images with injected failure modes (null pointer exceptions, memory leaks). Point the rollout at one of them to see the agent detect the problem and abort:
+The sample application ships several pre-built images with injected failure modes (null pointer exceptions, memory leaks, progressive latency drift). Point the rollout at one of them to see the agent detect the problem and abort:
 
 ```shell
-vim workloads/quarkus-rollouts-demo/base/rollouts.yaml
+vim workloads/quarkus-rollouts-demo/base/rollout.yaml
 git add . && git commit -m "test: trigger rollback scenario" && git push
 oc argo rollouts get rollout quarkus-demo -n quarkus-demo --watch
 ```
@@ -210,7 +210,7 @@ oc rollout restart deployment/kubernetes-agent -n openshift-gitops
 
 ### Custom analysis prompts
 
-Add application-specific context to the AnalysisTemplate at [`workloads/quarkus-rollouts-demo/analysistemplate-ai-agent.yaml`](workloads/quarkus-rollouts-demo/analysistemplate-ai-agent.yaml):
+Add application-specific context to the AnalysisTemplate at [`workloads/quarkus-rollouts-demo/base/analysistemplate-ai-agent.yaml`](workloads/quarkus-rollouts-demo/base/analysistemplate-ai-agent.yaml):
 
 ```yaml
 argoproj-labs/metric-ai:
