@@ -234,6 +234,8 @@ argoproj-labs/metric-ai:
 
 The agent patches the Rollout's `spec.paused`, so the rollout holds its current canary weight while a human decides. The measurement itself stays successful — the pause, not an abort, is what holds the rollout. Resume with `oc argo rollouts unpause quarkus-demo -n quarkus-demo` or abort manually. The paused rollout name is stored in the measurement's `pausedRollout` metadata field.
 
+While the rollout is paused, later measurements do not re-patch it or re-publish the event. If a human unpauses and the next analysis is still below the threshold, the rollout is paused again — each measurement applies the gate policy, so unpausing is a decision to override the analysis, not a way to dismiss it.
+
 The gate is off by default. The patch permission is scoped by a Role in the `quarkus-demo` namespace ([`workloads/quarkus-rollouts-demo/base/rbac.yaml`](workloads/quarkus-rollouts-demo/base/rbac.yaml)); the agent stays read-only everywhere else.
 
 ## Troubleshooting
