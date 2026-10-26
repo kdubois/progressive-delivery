@@ -71,6 +71,11 @@ spec:
       - setWeight: 10
       - pause: { duration: 30s } # the first analysis completes during this window
       - setWeight: 60
-      - pause: { duration: 40s } # the second analysis (30s after the first completes) lands here at 60% weight; also the window to manually abort if needed
+      # The second analysis must complete before full promotion: a promoted rollout
+      # terminates its background analysis run, and a measurement terminated mid-flight
+      # counts as successful. One analysis takes up to ~45s (LLM plus the scoring retry
+      # loop), so measurement 2 — starting ~30s after measurement 1 completes — can
+      # finish as late as ~t+120s. 90s keeps the 100% step safely after that.
+      - pause: { duration: 90s } # the second analysis completes here at 60% weight; also the window to manually abort if needed
       - setWeight: 100
       - pause: { duration: 5s } # finish rolling out to everyone

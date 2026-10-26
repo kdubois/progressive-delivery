@@ -60,7 +60,11 @@ spec:
       - setWeight: 10
       - pause: { duration: 20s } # canary serves 10% traffic; first AI analysis fires here (5s initial delay)
       - setWeight: 30
-      - pause: { duration: 60s } # both analyses complete during this window (at 10% and 30% weight)
+      # Both analyses must complete before full promotion: one analysis takes up to
+      # ~45s (LLM plus the scoring retry loop) and the second starts ~30s after the
+      # first completes, so it can finish as late as ~t+120s. 80s keeps the later
+      # steps safely after that.
+      - pause: { duration: 80s } # both analyses complete during this window (at 10% and 30% weight)
       - setWeight: 60
       - pause: { duration: 20s } # if everything is going well, continue rolling out
       - setWeight: 100
