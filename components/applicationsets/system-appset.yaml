@@ -13,6 +13,7 @@ spec:
       - path: system/progressive-delivery-controller
       - path: system/gitops-controller
       - path: system/agent-sandbox
+      - path: system/remediation-agent
       - path: system/vault-server
       - path: system/vault-secrets-operator
       - path: system/vault-config

@@ -11,11 +11,4 @@ data:
   #ANALYSIS_MODEL: gemini-2.5-flash
   #ANALYSIS_BASE_URL: https://generativelanguage.googleapis.com/v1beta/openai/
 
-
-  # Remediation model configuration
-  REMEDIATION_MODEL: Qwen3.8-27B
-  REMEDIATION_BASE_URL: https://litemaas.rhoai.rh-aiservices-bu.com/v1
-  #REMEDIATION_MODEL: gemini-2.5-flash
-  #REMEDIATION_BASE_URL: https://generativelanguage.googleapis.com/v1beta/openai/
-
   QUARKUS_PROFILE: "prod"

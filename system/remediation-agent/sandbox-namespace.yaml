@@ -1,0 +1,69 @@
+# Sandbox namespace for remediation runs.
+#
+# The coding agent executes untrusted, LLM-generated commands here. Isolation:
+# - pods run with restricted-v2, no service-account token, read-only root
+#   filesystem (enforced by the Sandbox CR the remediation-agent creates)
+# - the EgressFirewall below is the egress allow-list: GitHub (clone, push,
+#   archives), Maven Central (test dependencies), the LLM endpoint, and DNS.
+#   Everything else — including the Kubernetes API and other cluster services —
+#   is denied.
+# - ingress is denied: nothing needs to reach the sandbox pods
+#
+# The GitHub token pushed into a sandbox is fine-grained to a single repository
+# with contents:write and pull_requests:write: it can push branches, open PRs,
+# force-push and delete branches in that repository — nothing else. A human
+# reviews every PR; auto-merge is deliberately deferred.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: remediation
+---
+apiVersion: k8s.ovn.org/v1
+kind: EgressFirewall
+metadata:
+  name: remediation-sandbox-egress
+  namespace: remediation
+spec:
+  egress:
+  - type: Allow
+    to:
+      DNSName: github.com
+  - type: Allow
+    to:
+      DNSName: api.github.com
+  - type: Allow
+    to:
+      DNSName: objects.githubusercontent.com
+  - type: Allow
+    to:
+      DNSName: codeload.github.com
+  - type: Allow
+    to:
+      DNSName: repo.maven.apache.org
+  - type: Allow
+    to:
+      DNSName: litemaas.rhoai.rh-aiservices-bu.com
+  - type: Allow
+    to:
+      DNSName: registry.npmjs.org
+  # cluster DNS (the EgressFirewall resolves DNSName rules through it)
+  - type: Allow
+    to:
+      namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: openshift-dns
+    ports:
+      - protocol: UDP
+        port: 5353
+      - protocol: TCP
+        port: 5353
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-ingress
+  namespace: remediation
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress

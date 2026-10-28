@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# The remediation-agent service runs in openshift-gitops (next to the
+# kubernetes-agent that calls it); the sandbox namespace manifests are here
+# because they deploy together.
+resources:
+  - remediation-agent.yaml
+  - sandbox-namespace.yaml
+
+# Note: the remediation-agent secret must be created manually before deploying.
+# It is NOT included here because it contains sensitive data. The same secret
+# must exist in BOTH namespaces: openshift-gitops (the service reads it for PR
+# and issue creation) and remediation (the sandbox pods mount it to push branches):
+#   for NS in openshift-gitops remediation; do
+#     oc create secret generic remediation-agent -n $NS \
+#       --from-literal=github_token=<fine-grained PAT: contents:write, pull_requests:write> \
+#       --from-literal=llm_api_key=<key for the LLM endpoint>
+#   done

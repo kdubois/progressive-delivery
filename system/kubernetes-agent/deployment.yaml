@@ -37,12 +37,6 @@ spec:
                   name: kubernetes-agent
                   key: analysis_api_key
                   optional: true
-            - name: REMEDIATION_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: kubernetes-agent
-                  key: remediation_api_key
-                  optional: true
             - name: GITHUB_TOKEN
               valueFrom:
                 secretKeyRef:
