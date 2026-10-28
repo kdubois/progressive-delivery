@@ -7,13 +7,11 @@ kind: Kustomization
 resources:
   - remediation-agent.yaml
   - sandbox-namespace.yaml
+  - vault-secrets.yaml
 
-# Note: the remediation-agent secret must be created manually before deploying.
-# It is NOT included here because it contains sensitive data. The same secret
-# must exist in BOTH namespaces: openshift-gitops (the service reads it for PR
-# and issue creation) and remediation (the sandbox pods mount it to push branches):
-#   for NS in openshift-gitops remediation; do
-#     oc create secret generic remediation-agent -n $NS \
-#       --from-literal=github_token=<fine-grained PAT: contents:write, pull_requests:write> \
-#       --from-literal=llm_api_key=<key for the LLM endpoint>
-#   done
+# Credentials come from Vault KV (argo-rollouts/remediation-agent: github_token,
+# llm_api_key) and are synced into both namespaces by the Vault Secrets Operator
+# (vault-secrets.yaml). The bootstrap script writes the KV entry; if Vault
+# restarted (dev mode, in-memory storage), re-run the Vault bootstrap or:
+#   vault kv put secret/argo-rollouts/remediation-agent \
+#     github_token=<fine-grained PAT> llm_api_key=<key>
