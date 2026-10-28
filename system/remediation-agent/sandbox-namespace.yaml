@@ -47,6 +47,9 @@ spec:
       dnsName: litemaas.rhoai.rh-aiservices-bu.com
   - type: Allow
     to:
+      dnsName: api.enmaas.devshift.net
+  - type: Allow
+    to:
       dnsName: registry.npmjs.org
   # cluster DNS service, so DNSName rules resolve and the sandbox can use DNS
   - type: Allow
