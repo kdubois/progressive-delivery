@@ -1,0 +1,32 @@
+# Red Hat build of Agent Sandbox — declarative lifecycle (Sandbox, SandboxTemplate,
+# SandboxWarmPool, SandboxClaim CRDs) for isolated AI agent workloads.
+#
+# Runs on the default container runtime (runc, restricted-v2 SCC) with pod-level
+# hardening. Hardware isolation via `runtimeClassName: kata-remote` (peer pods)
+# requires TCP 15150/9000 open in the cluster VPC security groups, which cannot
+# be opened on this cluster with the available AWS credentials — flip the
+# runtimeClassName once that changes.
+# https://docs.redhat.com/en/documentation/openshift_sandboxed_containers/1.12/html/deploying_red_hat_build_of_agent_sandbox/
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: agent-sandbox-system
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: agent-sandbox-operator-group
+  namespace: agent-sandbox-system
+spec: {} # all namespaces
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: agent-sandbox-operator
+  namespace: agent-sandbox-system
+spec:
+  channel: preview-0.9
+  name: agent-sandbox-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+  installPlanApproval: Automatic

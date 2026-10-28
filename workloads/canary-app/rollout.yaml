@@ -33,7 +33,7 @@ spec:
         labels:
           role: canary
       analysis:
-        startingStep: 2 # delay starting analysis run until we have collected enough metrics
+        startingStep: 1 # first analysis fires during the initial pause, once the canary is Ready and serving traffic
         args:
         - name: service-name
           value: rollouts-demo-canary.canary.svc.cluster.local
@@ -58,9 +58,13 @@ spec:
             - rollouts-demo
       steps:
       - setWeight: 10
-      - pause: { duration: 20s } # 20 seconds to start gathering metrics before starting analysis
+      - pause: { duration: 20s } # canary serves 10% traffic; first AI analysis fires here (5s initial delay)
       - setWeight: 30
-      - pause: { duration: 60s } # 60 seconds to let the analysis do its job
+      # Both analyses must complete before full promotion: one analysis takes up to
+      # ~45s (LLM plus the scoring retry loop) and the second starts ~30s after the
+      # first completes, so it can finish as late as ~t+120s. 80s keeps the later
+      # steps safely after that.
+      - pause: { duration: 80s } # both analyses complete during this window (at 10% and 30% weight)
       - setWeight: 60
       - pause: { duration: 20s } # if everything is going well, continue rolling out
       - setWeight: 100

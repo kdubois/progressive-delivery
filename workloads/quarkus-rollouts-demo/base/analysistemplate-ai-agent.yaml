@@ -14,7 +14,10 @@ spec:
   metrics:
     - name: ai-analysis
       failureLimit: 0
-      count: 1
+      # Recurring analysis: one measurement early in the rollout (log-visible bugs)
+      # and one later when metrics have accumulated (weight-aware thresholds)
+      count: 2
+      interval: 30s
       initialDelay: 5s
       provider:
         plugin:
@@ -29,4 +32,10 @@ spec:
             baseBranch: main
             # Optional: Additional context for AI analysis
             extraPrompt: "Ignore color changes."
+            # Optional: pause the rollout for human review when the analysis
+            # promotes with confidence below the threshold. The measurement
+            # stays successful; the pause holds the rollout until a human
+            # runs `oc argo rollouts unpause` or aborts.
+            #pauseOnUncertainty: true
+            #uncertaintyThreshold: 50
 

@@ -7,5 +7,7 @@ spec:
   plugins:
     metric:
       - name: argoproj-labs/metric-ai
-        location: https://github.com/kdubois/rollouts-plugin-metric-ai/releases/download/v0.1.8/rollouts-plugin-metric-ai-linux-amd64
+        # Fork release that forwards the uncertainty pause gate to the agent.
+        # Replace with the upstream argoproj-labs release once the plugin PR merges.
+        location: https://github.com/kdubois/rollouts-plugin-metric-ai/releases/download/v0.1.9-uncertainty-pause/rollouts-plugin-metric-ai-linux-amd64
     trafficManagement: []

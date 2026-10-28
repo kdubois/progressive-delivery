@@ -6,12 +6,13 @@ Do not create summary or migration documents. Update manifests and documentation
 
 ## Stack
 
-OpenShift 4.10+, Argo CD (OpenShift GitOps operator), Argo Rollouts + `rollouts-plugin-metric-ai`, Kustomize, Bash scripts.
+OpenShift 4.20+, Argo CD (OpenShift GitOps operator), Argo Rollouts + `rollouts-plugin-metric-ai`, Kustomize, JBang scripts.
 
 ## Project Layout
 
 ```
 bootstrap/
+  bootstrap.java                     # JBang script — deploys stack + Vault bootstrap
   base/                              # Shared base (GitOps operator subscription)
   overlays/
     default/                         # Full deployment (installs Argo CD + all components)
@@ -47,10 +48,8 @@ workloads/
       scenario-1-stable/             # Happy path image
       scenario-2-null-pointer/       # NPE bug image
       scenario-3-memory-leak/        # Memory leak image
+      scenario-4-latency/            # Progressive latency regression image
   canary-app/                        # Alternate demo (argoproj/rollouts-demo)
-
-validate-deployment.sh               # Deployment health checks
-demo_scenarios.java                  # JBang orchestrator for the 3 demo scenarios
 ```
 
 ## Namespace Layout
@@ -62,34 +61,20 @@ demo_scenarios.java                  # JBang orchestrator for the 3 demo scenari
 
 ## Initial Deployment
 
-### Option A — cluster without existing Argo CD
+Run the JBang bootstrap script from the repo root. It prompts for credentials upfront, deploys the stack, and configures Vault automatically.
 
 ```bash
-kubectl apply -k bootstrap/overlays/default/
+./bootstrap/bootstrap.java                            # full install (includes Argo CD)
+./bootstrap/bootstrap.java --overlay existing-argocd  # reuse existing Argo CD
+./bootstrap/bootstrap.java --skip-vault               # skip Vault, use plain K8s Secret
+./bootstrap/bootstrap.java --vault-only               # re-run Vault bootstrap only
 ```
 
-### Option B — cluster with existing Argo CD
+The script accepts `ANALYSIS_API_KEY`, `REMEDIATION_API_KEY`, and `GITHUB_TOKEN` as environment variables to skip their prompts.
 
-```bash
-kubectl apply -k bootstrap/overlays/existing-argocd/
-```
+**Vault path (standard):** Credentials are written to `secret/argo-rollouts/kubernetes-agent` in Vault KV v2. The Vault Secrets Operator (`VaultStaticSecret` in `system/vault-config/`) syncs them to the `kubernetes-agent` K8s Secret and automatically restarts the agent Deployment. Re-run with `--vault-only` if the Vault pod restarts (dev mode, in-memory storage).
 
-### Create the Secret (before or right after applying bootstrap)
-
-The agent secret is **not** managed by GitOps. Two paths are supported:
-
-**Vault path (standard):** Run `bootstrap/vault/vault-bootstrap.sh` with the new credentials. It writes them to `secret/argo-rollouts/kubernetes-agent` in Vault KV v2. The Vault Secrets Operator (`VaultStaticSecret` in `system/vault-config/`) syncs the KV data to the `kubernetes-agent` K8s Secret within `refreshAfter: 300s` and automatically restarts the agent Deployment.
-
-```bash
-export ANALYSIS_API_KEY="..."
-export GITHUB_TOKEN="ghp_..."
-# Optional: export REMEDIATION_API_KEY="..." (defaults to ANALYSIS_API_KEY)
-./bootstrap/vault/vault-bootstrap.sh
-```
-
-To update credentials later, simply re-run the script with the new values — it is idempotent.
-
-**Plain K8s Secret path (bypass / no Vault):** For environments without Vault, copy the template, fill in credentials, and apply directly:
+**Plain K8s Secret path:** Use `--skip-vault`, then apply credentials manually:
 
 ```bash
 cp system/kubernetes-agent/secret.yaml.template system/kubernetes-agent/secret.yaml
@@ -124,18 +109,9 @@ Update the image tag in the desired overlay's `kustomization.yaml`, then push:
 # Change newTag to the target scenario image tag, commit, push
 ```
 
-Or use the JBang demo script to orchestrate all three scenarios:
-
-```bash
-jbang demo_scenarios.java
-```
-
 ## Verifying the Stack
 
 ```bash
-./validate-deployment.sh
-
-# Individual checks
 kubectl get pods -n openshift-gitops
 kubectl get pods -n quarkus-demo
 oc argo rollouts list rollouts -n quarkus-demo

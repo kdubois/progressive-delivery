@@ -33,4 +33,31 @@ subjects:
 - kind: ServiceAccount
   name: quarkus-demo
   namespace: quarkus-demo
+---
+# Allows the kubernetes-agent to pause the rollout for human review when the
+# uncertainty gate is enabled (pauseOnUncertainty in the AnalysisTemplate).
+# Scoped to this namespace: the agent stays read-only everywhere else.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: kubernetes-agent-rollout-pause
+  namespace: quarkus-demo
+rules:
+- apiGroups: ["argoproj.io"]
+  resources: ["rollouts"]
+  verbs: ["patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kubernetes-agent-rollout-pause-binding
+  namespace: quarkus-demo
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kubernetes-agent-rollout-pause
+subjects:
+- kind: ServiceAccount
+  name: kubernetes-agent
+  namespace: openshift-gitops
 
