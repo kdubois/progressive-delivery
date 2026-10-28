@@ -51,8 +51,8 @@ metadata:
 data:
   REMEDIATION_SANDBOX_IMAGE: ghcr.io/kdubois/remediation-sandbox:opencode
   REMEDIATION_SANDBOX_CODING_AGENT: opencode
-  REMEDIATION_SANDBOX_MODEL: Qwen3.8-27B
-  REMEDIATION_SANDBOX_LLM_BASE_URL: https://litemaas.rhoai.rh-aiservices-bu.com/v1
+  REMEDIATION_SANDBOX_MODEL: rits/zai-org/glm-5-3
+  REMEDIATION_SANDBOX_LLM_BASE_URL: https://api.enmaas.devshift.net/v1
   REMEDIATION_SANDBOX_NAMESPACE: remediation
   REMEDIATION_SANDBOX_KEEP_FAILED: "true"
   REMEDIATION_ALLOWED_REPOS: https://github.com/kdubois/argo-rollouts-quarkus-demo
