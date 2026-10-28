@@ -46,13 +46,18 @@ spec:
   - type: Allow
     to:
       DNSName: registry.npmjs.org
-  # cluster DNS (the EgressFirewall resolves DNSName rules through it)
+  # cluster DNS (node-local cache and dns-default pods; the EgressFirewall
+  # itself resolves DNSName rules through this)
   - type: Allow
     to:
       namespaceSelector:
         matchLabels:
           kubernetes.io/metadata.name: openshift-dns
     ports:
+      - protocol: UDP
+        port: 53
+      - protocol: TCP
+        port: 53
       - protocol: UDP
         port: 5353
       - protocol: TCP
