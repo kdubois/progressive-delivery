@@ -36,6 +36,6 @@ spec:
             # promotes with confidence below the threshold. The measurement
             # stays successful; the pause holds the rollout until a human
             # runs `oc argo rollouts unpause` or aborts.
-            #pauseOnUncertainty: true
-            #uncertaintyThreshold: 50
+            pauseOnUncertainty: true
+            uncertaintyThreshold: 96
 
