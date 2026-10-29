@@ -130,6 +130,9 @@ public class bootstrap implements Callable<Integer> {
             printSuccess("Stack deployed.");
         }
 
+        // ── Argo CD sync tuning ──────────────────────────────────────────────
+        argocdTuning(githubToken);
+
         // ── Vault bootstrap ──────────────────────────────────────────────────
         if (!runVault) {
             System.out.println();
@@ -145,6 +148,79 @@ public class bootstrap implements Callable<Integer> {
         vaultBootstrap(analysisApiKey, remediationApiKey, githubToken);
 
         return 0;
+    }
+
+    // ── Argo CD sync tuning ─────────────────────────────────────────────────
+
+    /**
+     * Makes GitOps syncs fast enough for live demos on a fresh cluster:
+     * a short git poll interval, and a GitHub webhook so pushes to this repo
+     * trigger a sync immediately. Both are per-cluster state, so they are set
+     * here rather than in the repo.
+     */
+    private void argocdTuning(String githubToken) throws Exception {
+        String namespace = System.getenv().getOrDefault("NAMESPACE", "openshift-gitops");
+
+        printStep("Setting Argo CD git poll interval to 15s...");
+        exec("oc", "patch", "configmap", "argocd-cm", "-n", namespace,
+            "-p", "{\"data\":{\"timeout.reconciliation\":\"15s\"}}");
+
+        if (githubToken == null || githubToken.isBlank()) {
+            printWarning("No GitHub token available, skipping the webhook (poll-only syncs).");
+            return;
+        }
+
+        printStep("Creating GitHub webhook for instant syncs...");
+        String route = execForOutput("oc", "get", "route", "openshift-gitops-server", "-n", namespace,
+            "-o", "jsonpath={.spec.host}");
+        if (route == null || route.isBlank()) {
+            printWarning("Argo CD route not found, skipping the webhook.");
+            return;
+        }
+        String secret = execForOutput("openssl", "rand", "-hex", "20");
+        exec("oc", "patch", "secret", "argocd-secret", "-n", namespace,
+            "-p", "{\"stringData\":{\"webhook.github.secret\":\"" + secret.trim() + "\"}}");
+
+        String payload = String.format(
+            "{\"name\":\"web\",\"active\":true,\"events\":[\"push\"],"
+            + "\"config\":{\"url\":\"https://%s/api/webhook\",\"content_type\":\"json\",\"secret\":\"%s\"}}",
+            route.trim(), secret.trim());
+        githubPost(githubToken, "repos/" + githubRepo() + "/hooks", payload);
+        printSuccess("Webhook created: pushes to " + githubRepo() + " sync Argo CD instantly.");
+    }
+
+    private String githubRepo() {
+        // the repo this bootstrap lives in; override for forks
+        return System.getenv().getOrDefault("GITHUB_REPO", "kdubois/progressive-delivery");
+    }
+
+    /** Runs a command and returns its stdout, failing on a non-zero exit. */
+    private String execForOutput(String... command) throws Exception {
+        ProcessBuilder pb = new ProcessBuilder(command);
+        pb.redirectErrorStream(false);
+        Process p = pb.start();
+        String output = new String(p.getInputStream().readAllBytes()).trim();
+        int exit = p.waitFor();
+        if (exit != 0) {
+            throw new RuntimeException("Command failed (exit " + exit + "): " + String.join(" ", command));
+        }
+        return output;
+    }
+
+    private void githubPost(String token, String path, String body) throws Exception {
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest req = HttpRequest.newBuilder()
+            .uri(URI.create("https://api.github.com/" + path))
+            .header("Authorization", "Bearer " + token)
+            .header("Accept", "application/vnd.github+json")
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(body))
+            .build();
+        HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
+        // 201 = created; 422 = webhook with this URL already exists
+        if (resp.statusCode() != 201 && resp.statusCode() != 422) {
+            throw new RuntimeException("GitHub webhook POST failed: " + resp.statusCode() + " " + resp.body());
+        }
     }
 
     // ── Vault bootstrap ──────────────────────────────────────────────────────

@@ -123,6 +123,14 @@ Credentials can also be passed via environment variables to skip the prompts:
 ANALYSIS_API_KEY=sk-... GITHUB_TOKEN=ghp_... ./bootstrap/bootstrap.java
 ```
 
+### Argo CD sync tuning (bootstrap)
+
+The bootstrap also tunes Argo CD sync latency for live demos: the git poll
+interval drops to 15s, and a GitHub webhook on this repository triggers
+instant syncs on push. Both are per-cluster state, created by the bootstrap —
+a new cluster gets them automatically. Set `GITHUB_REPO` when bootstrapping
+a fork.
+
 ### 3. Verify the deployment
 
 Argo CD will take a few minutes to sync everything. Once it's done:
