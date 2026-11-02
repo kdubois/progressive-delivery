@@ -41,8 +41,6 @@ Update the agent ConfigMap at [`system/kubernetes-agent/configmap.yaml`](system/
 data:
   ANALYSIS_BASE_URL: "https://api.openai.com/v1"
   ANALYSIS_MODEL: "gpt-4o"
-  REMEDIATION_BASE_URL: "https://api.openai.com/v1"  # defaults to ANALYSIS_BASE_URL if omitted
-  REMEDIATION_MODEL: "gpt-4o"                         # defaults to ANALYSIS_MODEL if omitted
 ```
 
 Any OpenAI-compatible endpoint works here — LiteLLM, vLLM, Gemini, etc.
@@ -67,7 +65,7 @@ The bootstrap script deploys the full stack and then optionally configures a Has
 
 
 Flow of the script:
-1. Prompt for your AI API key, remediation API key (optional), and GitHub token
+1. Prompt for your AI API key and GitHub token
 2. Install the OpenShift GitOps and Vault operators (default overlay only)
 3. Wait for the Argo CD CRDs to be established
 4. Apply the Argo CD instance, AppProjects, and ApplicationSets
@@ -102,9 +100,8 @@ The template expects:
 
 ```yaml
 stringData:
-  openai_api_key: sk-...      # required
+  analysis_api_key: sk-...    # required
   github_token: ghp_...       # required
-  rem_api_key: sk-...         # optional — defaults to openai_api_key
 ```
 
 > `secret.yaml` is git-ignored and never managed by GitOps.

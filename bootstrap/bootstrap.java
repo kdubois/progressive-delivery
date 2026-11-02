@@ -72,7 +72,6 @@ public class bootstrap implements Callable<Integer> {
         // ── Collect credentials upfront ─────────────────────────────────────
         // Prompt before any cluster work so missing values fail fast.
         String analysisApiKey = null;
-        String remediationApiKey = null;
         String githubToken = null;
 
         if (runVault) {
@@ -88,11 +87,6 @@ public class bootstrap implements Callable<Integer> {
             if (analysisApiKey.isBlank()) {
                 printError("Analysis API key is required.");
                 return 1;
-            }
-
-            remediationApiKey = readEnvOrPromptSecret("REMEDIATION_API_KEY", "Remediation API key (leave blank to reuse analysis key): ", false);
-            if (remediationApiKey.isBlank()) {
-                remediationApiKey = analysisApiKey;
             }
 
             githubToken = readEnvOrPromptSecret("GITHUB_TOKEN", "GitHub token (e.g. ghp_...): ", true);
@@ -145,7 +139,7 @@ public class bootstrap implements Callable<Integer> {
         }
 
         printHeader("Vault bootstrap");
-        vaultBootstrap(analysisApiKey, remediationApiKey, githubToken);
+        vaultBootstrap(analysisApiKey, githubToken);
 
         return 0;
     }
@@ -225,7 +219,7 @@ public class bootstrap implements Callable<Integer> {
 
     // ── Vault bootstrap ──────────────────────────────────────────────────────
 
-    private void vaultBootstrap(String analysisApiKey, String remediationApiKey, String githubToken) throws Exception {
+    private void vaultBootstrap(String analysisApiKey, String githubToken) throws Exception {
         String namespace = System.getenv().getOrDefault("NAMESPACE", "openshift-gitops");
         int vaultPort = Integer.parseInt(System.getenv().getOrDefault("VAULT_PORT", "8200"));
         String vaultAddr = "http://127.0.0.1:" + vaultPort;
@@ -259,8 +253,8 @@ public class bootstrap implements Callable<Integer> {
 
             printStep("Writing credentials to Vault KV...");
             String secretPayload = String.format(
-                "{\"data\":{\"analysis_api_key\":\"%s\",\"remediation_api_key\":\"%s\",\"github_token\":\"%s\"}}",
-                analysisApiKey, remediationApiKey, githubToken);
+                "{\"data\":{\"analysis_api_key\":\"%s\",\"github_token\":\"%s\"}}",
+                analysisApiKey, githubToken);
             vaultPost(vaultAddr, "secret/data/argo-rollouts/kubernetes-agent", secretPayload, false);
 
             printStep("Enabling Kubernetes auth method...");

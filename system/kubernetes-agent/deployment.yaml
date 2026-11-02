@@ -37,17 +37,6 @@ spec:
                   name: kubernetes-agent
                   key: analysis_api_key
                   optional: true
-            - name: GITHUB_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: kubernetes-agent
-                  key: github_token
-                  optional: true
-            # Git Configuration
-            - name: GIT_USERNAME
-              value: "kubernetes-agent"
-            - name: GIT_EMAIL
-              value: "kubernetes-agent@csanchez.org"
           resources:
             requests:
               memory: "512Mi"
