@@ -7,16 +7,13 @@ spec:
   generators:
   - git:
       repoURL: https://github.com/kdubois/progressive-delivery
-      revision: main
+      revision: deploy-test
       directories:
       - path: system/kubernetes-agent
       - path: system/progressive-delivery-controller
       - path: system/gitops-controller
       - path: system/agent-sandbox
       - path: system/remediation-agent
-      - path: system/vault-server
-      - path: system/vault-secrets-operator
-      - path: system/vault-config
   template:
     metadata:
       name: '{{path.basename}}'
@@ -45,7 +42,7 @@ spec:
             maxDuration: 5m
       source:
         repoURL: https://github.com/kdubois/progressive-delivery
-        targetRevision: main
+        targetRevision: deploy-test
         path: '{{path}}'
       destination:
         server: https://kubernetes.default.svc

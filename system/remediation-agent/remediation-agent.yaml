@@ -77,7 +77,7 @@ spec:
       serviceAccountName: remediation-agent
       containers:
         - name: agent
-          image: ghcr.io/kdubois/remediation-agent:main
+          image: ghcr.io/kdubois/remediation-agent:pr-1
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
