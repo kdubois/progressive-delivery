@@ -37,6 +37,15 @@ spec:
                   name: kubernetes-agent
                   key: analysis_api_key
                   optional: true
+            # Optional: Jev (TypeSafe) key for the decision-model second opinion
+            # on the analysis. Without it the grader disables itself and the
+            # pause gate falls back to the analysis model's own confidence.
+            - name: TYPESAFE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: kubernetes-agent
+                  key: typesafe_api_key
+                  optional: true
           resources:
             requests:
               memory: "512Mi"
