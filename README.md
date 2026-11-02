@@ -101,7 +101,7 @@ The template expects:
 ```yaml
 stringData:
   analysis_api_key: sk-...    # required
-  github_token: ghp_...       # required
+  typesafe_api_key: ...       # optional - Jev key for the analysis second opinion
 ```
 
 > `secret.yaml` is git-ignored and never managed by GitOps.
