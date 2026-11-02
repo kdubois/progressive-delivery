@@ -37,5 +37,5 @@ spec:
             # successful; the pause holds the rollout until a human runs
             # `oc argo rollouts unpause` or aborts.
             pauseOnUncertainty: true
-            uncertaintyThreshold: 50
+            uncertaintyThreshold: 99
 
