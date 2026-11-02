@@ -10,6 +10,7 @@ resources:
 - rollout.yaml
 - analysistemplate-ai-agent.yaml
 - route.yaml
+- rbac-pause.yaml
 
 patchesJson6902:
   - target:
