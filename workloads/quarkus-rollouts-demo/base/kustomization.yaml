@@ -10,5 +10,4 @@ resources:
 - rollout.yaml
 - analysistemplate-ai-agent.yaml
 - route.yaml
-- plugin-rbac.yaml
 - rbac.yaml
