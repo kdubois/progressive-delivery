@@ -7,7 +7,6 @@ kind: Kustomization
 resources:
   - remediation-agent.yaml
   - sandbox-namespace.yaml
-  - vault-secrets.yaml
 
 # Credentials come from Vault KV (argo-rollouts/remediation-agent: github_token,
 # llm_api_key) and are synced into both namespaces by the Vault Secrets Operator
