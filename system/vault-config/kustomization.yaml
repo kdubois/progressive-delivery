@@ -5,3 +5,4 @@ resources:
   - vault-connection.yaml
   - vault-auth.yaml
   - vault-static-secret.yaml
+  - vso-rbac.yaml

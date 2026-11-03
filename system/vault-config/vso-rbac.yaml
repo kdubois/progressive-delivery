@@ -1,0 +1,55 @@
+# The Vault Secrets Operator runs in openshift-operators (OLM install) and
+# authenticates to Vault by requesting short-lived tokens for the service
+# accounts named in the VaultAuth objects. Those requests need explicit
+# permission in each target namespace — without this the token request fails,
+# the operator falls back to its own service account, and Vault rejects the
+# login with "permission denied".
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: vso-token-requester
+  namespace: openshift-gitops
+rules:
+- apiGroups: [""]
+  resources: ["serviceaccounts/token"]
+  resourceNames: ["kubernetes-agent", "remediation-agent"]
+  verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: vso-token-requester
+  namespace: openshift-gitops
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: vso-token-requester
+subjects:
+- kind: ServiceAccount
+  name: vault-secrets-operator-controller-manager
+  namespace: openshift-operators
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: vso-token-requester
+  namespace: remediation
+rules:
+- apiGroups: [""]
+  resources: ["serviceaccounts/token"]
+  resourceNames: ["default"]
+  verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: vso-token-requester
+  namespace: remediation
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: vso-token-requester
+subjects:
+- kind: ServiceAccount
+  name: vault-secrets-operator-controller-manager
+  namespace: openshift-operators
