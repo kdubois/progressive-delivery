@@ -9,10 +9,6 @@ resources:
   - namespace-role.yaml
 
 patches:
-  - path: rbac-patch.yaml
-    target:
-      kind: ClusterRole
-      name: argo-rollouts
   # Use strategic merge patch to fix RolloutManager bug
   # RolloutManager creates 'metricPlugins' but should be 'metricProviderPlugins'
   - path: argo-rollouts-configmap.yaml
