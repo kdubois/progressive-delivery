@@ -41,8 +41,6 @@ Update the agent ConfigMap at [`system/kubernetes-agent/configmap.yaml`](system/
 data:
   ANALYSIS_BASE_URL: "https://api.openai.com/v1"
   ANALYSIS_MODEL: "gpt-4o"
-  REMEDIATION_BASE_URL: "https://api.openai.com/v1"  # defaults to ANALYSIS_BASE_URL if omitted
-  REMEDIATION_MODEL: "gpt-4o"                         # defaults to ANALYSIS_MODEL if omitted
 ```
 
 Any OpenAI-compatible endpoint works here — LiteLLM, vLLM, Gemini, etc.
@@ -67,7 +65,7 @@ The bootstrap script deploys the full stack and then optionally configures a Has
 
 
 Flow of the script:
-1. Prompt for your AI API key, remediation API key (optional), and GitHub token
+1. Prompt for your AI API key and GitHub token
 2. Install the OpenShift GitOps and Vault operators (default overlay only)
 3. Wait for the Argo CD CRDs to be established
 4. Apply the Argo CD instance, AppProjects, and ApplicationSets
@@ -102,9 +100,9 @@ The template expects:
 
 ```yaml
 stringData:
-  openai_api_key: sk-...      # required
-  github_token: ghp_...       # required
-  rem_api_key: sk-...         # optional — defaults to openai_api_key
+  analysis_api_key: sk-...            # required - cheap analysis tier (Qwen)
+  analysis_strong_api_key: ...        # optional - escalation tier (DeepSeek)
+  typesafe_api_key: ...               # optional - Jev key for the grader
 ```
 
 > `secret.yaml` is git-ignored and never managed by GitOps.
@@ -240,9 +238,9 @@ argoproj-labs/metric-ai:
   uncertaintyThreshold: 50
 ```
 
-The agent patches the Rollout's `spec.paused`, so the rollout holds its current canary weight while a human decides. The measurement itself stays successful — the pause, not an abort, is what holds the rollout. Resume with `oc argo rollouts unpause quarkus-demo -n quarkus-demo` or abort manually. The paused rollout name is stored in the measurement's `pausedRollout` metadata field.
+The agent patches the Rollout's `spec.paused`, so the rollout holds its current canary weight while a human decides. The measurement itself stays successful — the pause, not an abort, is what holds the rollout. Resume with `oc argo rollouts promote quarkus-demo -n quarkus-demo` or abort manually. The paused rollout name is stored in the measurement's `pausedRollout` metadata field.
 
-While the rollout is paused, later measurements do not re-patch it or re-publish the event. If a human unpauses and the next analysis is still below the threshold, the rollout is paused again — each measurement applies the gate policy, so unpausing is a decision to override the analysis, not a way to dismiss it.
+While the rollout is paused, later measurements do not re-patch it or re-publish the event. If a human promotes and the next analysis is still below the threshold, the rollout is paused again — each measurement applies the gate policy, so promoting is a decision to override the analysis, not a way to dismiss it.
 
 The gate is off by default. The patch permission is scoped by a Role in the `quarkus-demo` namespace ([`workloads/quarkus-rollouts-demo/base/rbac.yaml`](workloads/quarkus-rollouts-demo/base/rbac.yaml)); the agent stays read-only everywhere else.
 
