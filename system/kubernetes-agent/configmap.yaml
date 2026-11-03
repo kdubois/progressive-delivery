@@ -8,6 +8,10 @@ data:
   #ANALYSIS_MODEL: Qwen3.6-35B-A3B
   ANALYSIS_MODEL: Qwen3.8-27B
   ANALYSIS_BASE_URL: https://litemaas.rhoai.rh-aiservices-bu.com/v1
+  # Strong tier for the analysis escalation (open weights, like the cheap tier).
+  # Empty model disables the escalation; the key comes from the secret.
+  ANALYSIS_STRONG_MODEL: rits/deepseek-ai/DeepSeek-V4.1-Flash-1017
+  ANALYSIS_STRONG_BASE_URL: https://api.enmaas.devshift.net/v1
   #ANALYSIS_MODEL: gemini-3.5-flash
   #ANALYSIS_BASE_URL: https://generativelanguage.googleapis.com/v1beta/openai/
 
