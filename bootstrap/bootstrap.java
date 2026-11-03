@@ -73,6 +73,9 @@ public class bootstrap implements Callable<Integer> {
         // Prompt before any cluster work so missing values fail fast.
         String analysisApiKey = null;
         String githubToken = null;
+        String typesafeApiKey = null;
+        String analysisStrongApiKey = null;
+        String llmApiKey = null;
 
         if (runVault) {
             printHeader("Credentials");
@@ -81,6 +84,12 @@ public class bootstrap implements Callable<Integer> {
             System.out.println("  - An AI API key (OpenAI, Gemini, or any OpenAI-compatible endpoint)");
             System.out.println("  - A GitHub personal access token with 'repo' scope");
             System.out.println("    https://github.com/settings/tokens");
+            System.out.println();
+            System.out.println("  Optional, read from the environment without prompting (empty disables");
+            System.out.println("  the feature):");
+            System.out.println("  - TYPESAFE_API_KEY - Jev key for the analysis grader");
+            System.out.println("  - ANALYSIS_STRONG_API_KEY - key for the strong-model escalation tier");
+            System.out.println("  - LLM_API_KEY - LLM key for the remediation sandbox (llm_api_key)");
             System.out.println();
 
             analysisApiKey = readEnvOrPromptSecret("ANALYSIS_API_KEY", "Analysis API key (e.g. sk-...): ", true);
@@ -94,6 +103,9 @@ public class bootstrap implements Callable<Integer> {
                 printError("GitHub token is required.");
                 return 1;
             }
+            typesafeApiKey = System.getenv().getOrDefault("TYPESAFE_API_KEY", "");
+            analysisStrongApiKey = System.getenv().getOrDefault("ANALYSIS_STRONG_API_KEY", "");
+            llmApiKey = System.getenv().getOrDefault("LLM_API_KEY", "");
             System.out.println();
         }
 
@@ -139,7 +151,7 @@ public class bootstrap implements Callable<Integer> {
         }
 
         printHeader("Vault bootstrap");
-        vaultBootstrap(analysisApiKey, githubToken);
+        vaultBootstrap(analysisApiKey, githubToken, typesafeApiKey, analysisStrongApiKey, llmApiKey);
 
         return 0;
     }
@@ -219,7 +231,8 @@ public class bootstrap implements Callable<Integer> {
 
     // ── Vault bootstrap ──────────────────────────────────────────────────────
 
-    private void vaultBootstrap(String analysisApiKey, String githubToken) throws Exception {
+    private void vaultBootstrap(String analysisApiKey, String githubToken, String typesafeApiKey,
+            String analysisStrongApiKey, String llmApiKey) throws Exception {
         String namespace = System.getenv().getOrDefault("NAMESPACE", "openshift-gitops");
         int vaultPort = Integer.parseInt(System.getenv().getOrDefault("VAULT_PORT", "8200"));
         String vaultAddr = "http://127.0.0.1:" + vaultPort;
@@ -251,11 +264,20 @@ public class bootstrap implements Callable<Integer> {
             printStep("Enabling KV v2 secrets engine...");
             vaultPost(vaultAddr, "sys/mounts/secret", "{\"type\":\"kv\",\"options\":{\"version\":\"2\"}}", true);
 
-            printStep("Writing credentials to Vault KV...");
-            String secretPayload = String.format(
-                "{\"data\":{\"analysis_api_key\":\"%s\",\"github_token\":\"%s\"}}",
-                analysisApiKey, githubToken);
-            vaultPost(vaultAddr, "secret/data/argo-rollouts/kubernetes-agent", secretPayload, false);
+            printStep("Writing agent credentials to Vault KV...");
+            // all keys the kubernetes-agent secret needs; the Vault Secrets Operator
+            // replaces the whole secret on sync, so every key must be present here.
+            // Empty values disable the optional features (grader, escalation).
+            String agentPayload = String.format(
+                "{\"data\":{\"analysis_api_key\":\"%s\",\"typesafe_api_key\":\"%s\",\"analysis_strong_api_key\":\"%s\"}}",
+                analysisApiKey, typesafeApiKey, analysisStrongApiKey);
+            vaultPost(vaultAddr, "secret/data/argo-rollouts/kubernetes-agent", agentPayload, false);
+
+            printStep("Writing remediation credentials to Vault KV...");
+            String remediationPayload = String.format(
+                "{\"data\":{\"github_token\":\"%s\",\"llm_api_key\":\"%s\"}}",
+                githubToken, llmApiKey);
+            vaultPost(vaultAddr, "secret/data/argo-rollouts/remediation-agent", remediationPayload, false);
 
             printStep("Enabling Kubernetes auth method...");
             vaultPost(vaultAddr, "sys/auth/kubernetes", "{\"type\":\"kubernetes\"}", true);
@@ -264,23 +286,33 @@ public class bootstrap implements Callable<Integer> {
             vaultPost(vaultAddr, "auth/kubernetes/config",
                 "{\"kubernetes_host\":\"https://kubernetes.default.svc:443\"}", false);
 
-            printStep("Writing policy and auth role...");
+            printStep("Writing policies and auth roles...");
             vaultPut(vaultAddr, "sys/policies/acl/kubernetes-agent",
                 "{\"policy\":\"path \\\"secret/data/argo-rollouts/kubernetes-agent\\\" { capabilities = [\\\"read\\\"] }\"}");
             vaultPost(vaultAddr, "auth/kubernetes/role/kubernetes-agent",
                 String.format("{\"bound_service_account_names\":[\"kubernetes-agent\"]," +
                     "\"bound_service_account_namespaces\":[\"%s\"]," +
                     "\"policies\":[\"kubernetes-agent\"],\"ttl\":\"1h\"}", namespace), false);
+            // the remediation syncs authenticate as the remediation-agent SA in
+            // openshift-gitops (service deployment) and the default SA in the
+            // sandbox namespace (sandbox pods)
+            vaultPut(vaultAddr, "sys/policies/acl/remediation-agent",
+                "{\"policy\":\"path \\\"secret/data/argo-rollouts/remediation-agent\\\" { capabilities = [\\\"read\\\"] }\"}");
+            vaultPost(vaultAddr, "auth/kubernetes/role/remediation-agent",
+                String.format("{\"bound_service_account_names\":[\"remediation-agent\",\"default\"]," +
+                    "\"bound_service_account_namespaces\":[\"%s\",\"remediation\"]," +
+                    "\"policies\":[\"remediation-agent\"],\"ttl\":\"1h\"}", namespace), false);
 
             System.out.println();
             System.out.println(GREEN + "============================================================" + RESET);
             printSuccess("Vault bootstrap complete.");
             System.out.println();
             System.out.println("  Vault KV:   secret/argo-rollouts/kubernetes-agent");
-            System.out.println("  Auth role:  kubernetes-agent (SA: kubernetes-agent, NS: " + namespace + ")");
+            System.out.println("  Vault KV:   secret/argo-rollouts/remediation-agent");
+            System.out.println("  Auth roles: kubernetes-agent, remediation-agent");
             System.out.println();
             System.out.println("  The Vault Secrets Operator will sync credentials to K8s");
-            System.out.println("  Secret 'kubernetes-agent' in namespace '" + namespace + "'.");
+            System.out.println("  Secrets 'kubernetes-agent' and 'remediation-agent'.");
             System.out.println();
             System.out.println("  Verify with: oc get secret kubernetes-agent -n " + namespace);
             System.out.println(GREEN + "============================================================" + RESET);
