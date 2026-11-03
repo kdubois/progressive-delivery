@@ -5,6 +5,7 @@ kind: Kustomization
 # kubernetes-agent that calls it); the sandbox namespace manifests are here
 # because they deploy together.
 resources:
+  - vault-secrets.yaml
   - remediation-agent.yaml
   - sandbox-namespace.yaml
 
