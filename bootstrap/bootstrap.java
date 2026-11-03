@@ -191,8 +191,16 @@ public class bootstrap implements Callable<Integer> {
             "{\"name\":\"web\",\"active\":true,\"events\":[\"push\"],"
             + "\"config\":{\"url\":\"https://%s/api/webhook\",\"content_type\":\"json\",\"secret\":\"%s\"}}",
             route.trim(), secret.trim());
-        githubPost(githubToken, "repos/" + githubRepo() + "/hooks", payload);
-        printSuccess("Webhook created: pushes to " + githubRepo() + " sync Argo CD instantly.");
+        try {
+            githubPost(githubToken, "repos/" + githubRepo() + "/hooks", payload);
+            printSuccess("Webhook created: pushes to " + githubRepo() + " sync Argo CD instantly.");
+        } catch (Exception e) {
+            // the webhook is an optimization over the git poll interval; a token
+            // without webhook scope (e.g. a fine-grained PAT) must not block the
+            // rest of the bootstrap
+            printWarning("GitHub webhook not created (" + e.getMessage() + "). "
+                + "Syncs fall back to the git poll interval.");
+        }
     }
 
     private String githubRepo() {
