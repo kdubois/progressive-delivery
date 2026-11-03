@@ -11,12 +11,8 @@ metadata:
 rules:
   # Read pods, logs, and events
   - apiGroups: [""]
-    resources: ["pods", "pods/log", "events", "services", "configmaps", "endpoints", "secrets"]
+    resources: ["pods", "pods/log", "events", "services", "configmaps", "endpoints"]
     verbs: ["get", "list", "watch"]
-  # Execute commands in pods (for debugging)
-  - apiGroups: [""]
-    resources: ["pods/exec"]
-    verbs: ["create"]
   # Read deployments and other workloads
   - apiGroups: ["apps"]
     resources: ["deployments", "statefulsets", "daemonsets", "replicasets"]
@@ -42,4 +38,30 @@ roleRef:
   kind: ClusterRole
   name: kubernetes-agent
   apiGroup: rbac.authorization.k8s.io
-
+---
+# Allows the kubernetes-agent to read its own credentials: the %prod profile
+# loads the kubernetes-agent Secret through quarkus-kubernetes-config. Scoped
+# to this namespace instead of granting secrets access cluster-wide.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: kubernetes-agent-secrets
+  namespace: openshift-gitops
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kubernetes-agent-secrets-binding
+  namespace: openshift-gitops
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kubernetes-agent-secrets
+subjects:
+- kind: ServiceAccount
+  name: kubernetes-agent
+  namespace: openshift-gitops

@@ -37,17 +37,24 @@ spec:
                   name: kubernetes-agent
                   key: analysis_api_key
                   optional: true
-            - name: GITHUB_TOKEN
+            # Optional: Jev (TypeSafe) key for the decision-model second opinion
+            # on the analysis. Without it the grader disables itself and the
+            # pause gate falls back to the analysis model's own confidence.
+            - name: TYPESAFE_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: kubernetes-agent
-                  key: github_token
+                  key: typesafe_api_key
                   optional: true
-            # Git Configuration
-            - name: GIT_USERNAME
-              value: "kubernetes-agent"
-            - name: GIT_EMAIL
-              value: "kubernetes-agent@csanchez.org"
+            # Optional: strong-tier key for the analysis escalation. Without it
+            # the escalation tier disables itself and a disputed conclusion
+            # goes straight to the pause gate.
+            - name: ANALYSIS_STRONG_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: kubernetes-agent
+                  key: analysis_strong_api_key
+                  optional: true
           resources:
             requests:
               memory: "512Mi"

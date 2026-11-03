@@ -30,7 +30,7 @@ system/
     deployment.yaml                  # Quarkus agent (512Mi–2Gi)
     configmap.yaml                   # AI model endpoint and provider config
     secret.yaml.template             # Credentials template — NOT managed by GitOps
-    rbac.yaml                        # ClusterRole: read pods/logs/events/rollouts
+    rbac.yaml                        # ClusterRole: read pods/logs/events/rollouts; Role: read own secret
     service.yaml                     # ClusterIP :8080
   vault-server/
     vault-helm-app.yaml              # ArgoCD Application — deploys Vault via Helm chart (dev mode)
@@ -70,7 +70,7 @@ Run the JBang bootstrap script from the repo root. It prompts for credentials up
 ./bootstrap/bootstrap.java --vault-only               # re-run Vault bootstrap only
 ```
 
-The script accepts `ANALYSIS_API_KEY`, `REMEDIATION_API_KEY`, and `GITHUB_TOKEN` as environment variables to skip their prompts.
+The script accepts `ANALYSIS_API_KEY` and `GITHUB_TOKEN` as environment variables to skip their prompts.
 
 **Vault path (standard):** Credentials are written to `secret/argo-rollouts/kubernetes-agent` in Vault KV v2. The Vault Secrets Operator (`VaultStaticSecret` in `system/vault-config/`) syncs them to the `kubernetes-agent` K8s Secret and automatically restarts the agent Deployment. Re-run with `--vault-only` if the Vault pod restarts (dev mode, in-memory storage).
 
@@ -78,7 +78,7 @@ The script accepts `ANALYSIS_API_KEY`, `REMEDIATION_API_KEY`, and `GITHUB_TOKEN`
 
 ```bash
 cp system/kubernetes-agent/secret.yaml.template system/kubernetes-agent/secret.yaml
-# Fill in ANALYSIS_API_KEY, REMEDIATION_API_KEY, GITHUB_TOKEN
+# Fill in ANALYSIS_API_KEY, GITHUB_TOKEN
 kubectl apply -f system/kubernetes-agent/secret.yaml -n openshift-gitops
 ```
 
