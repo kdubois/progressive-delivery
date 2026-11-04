@@ -46,6 +46,9 @@ rules:
 - apiGroups: ["argoproj.io"]
   resources: ["rollouts"]
   verbs: ["patch"]
+- apiGroups: ["argoproj.io"]
+  resources: ["rollouts/status"]
+  verbs: ["patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding

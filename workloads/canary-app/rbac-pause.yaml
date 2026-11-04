@@ -1,3 +1,39 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: quarkus-demo
+  namespace: quarkus-demo
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: quarkus-demo-reader
+  namespace: quarkus-demo
+rules:
+- apiGroups: ["argoproj.io"]
+  resources: ["rollouts"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["argoproj.io"]
+  resources: ["analysisruns"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: quarkus-demo-reader-binding
+  namespace: quarkus-demo
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: quarkus-demo-reader
+subjects:
+- kind: ServiceAccount
+  name: quarkus-demo
+  namespace: quarkus-demo
+---
 # Allows the kubernetes-agent to pause the rollout for human review when the
 # uncertainty gate is enabled (pauseOnUncertainty in the AnalysisTemplate).
 # Scoped to this namespace: the agent stays read-only everywhere else.
@@ -5,17 +41,23 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: kubernetes-agent-rollout-pause
-  namespace: canary
+  namespace: quarkus-demo
 rules:
 - apiGroups: ["argoproj.io"]
   resources: ["rollouts"]
+  verbs: ["patch"]
+- apiGroups: ["argoproj.io"]
+  resources: ["rollouts/status"]
+  verbs: ["patch"]
+- apiGroups: ["argoproj.io"]
+  resources: ["rollouts/status"]
   verbs: ["patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: kubernetes-agent-rollout-pause-binding
-  namespace: canary
+  namespace: quarkus-demo
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -24,3 +66,4 @@ subjects:
 - kind: ServiceAccount
   name: kubernetes-agent
   namespace: openshift-gitops
+
