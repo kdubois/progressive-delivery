@@ -18,10 +18,10 @@ spec:
       serviceAccountName: quarkus-demo
       containers:
       - name: quarkus-demo
-        #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v1.stable
-        #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v1.stable
-        image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v1.stable
-        #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v1.stable
+        #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:stable-a7ccbbbf4ff556efc4688dd42f023f250ebf1f87
+        #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:stable-a7ccbbbf4ff556efc4688dd42f023f250ebf1f87
+        image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:stable-a7ccbbbf4ff556efc4688dd42f023f250ebf1f87
+        #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:stable-a7ccbbbf4ff556efc4688dd42f023f250ebf1f87
         imagePullPolicy: Always
         ports:
         - name: http
