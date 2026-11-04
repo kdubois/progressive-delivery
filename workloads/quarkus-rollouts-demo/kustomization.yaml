@@ -6,4 +6,4 @@ resources:
 
 images:
   - name: ghcr.io/kdubois/argo-rollouts-quarkus-demo
-    newTag: v2.nullpointer
+    newTag: v1.stable
