@@ -3,3 +3,7 @@ kind: Kustomization
 
 resources:
 - base
+
+images:
+  - name: ghcr.io/kdubois/argo-rollouts-quarkus-demo
+    newTag: stable-c78b9a648e4039d5d75b2f91089272be129f3bb2
