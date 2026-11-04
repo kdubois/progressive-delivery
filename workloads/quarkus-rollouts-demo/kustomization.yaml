@@ -6,4 +6,4 @@ resources:
 
 images:
   - name: ghcr.io/kdubois/argo-rollouts-quarkus-demo
-    newTag: stable-c78b9a648e4039d5d75b2f91089272be129f3bb2
+    newTag: stable-a7ccbbbf4ff556efc4688dd42f023f250ebf1f87
