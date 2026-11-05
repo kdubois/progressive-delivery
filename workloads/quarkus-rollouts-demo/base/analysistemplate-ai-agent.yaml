@@ -28,7 +28,7 @@ spec:
             stableLabel: role=stable
             canaryLabel: role=canary
             # Optional: Create GitHub issues on failures
-            githubUrl: https://github.com/kdubois/argo-rollouts-quarkus-demo
+            githubUrl: https://github.com/kdubois/argo-rollouts-aiops-dashboard
             baseBranch: main
             # Optional: Additional context for AI analysis
             extraPrompt: "Ignore color changes."
