@@ -22,7 +22,7 @@ spec:
         # v1–v4 are rebuilt from the demo repo's main on every push.
         #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:main
         #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v1.stable
-        image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v1.stable
+        image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:stable-e49899c166c44ec4466e684ac83264ca851e68e0
         #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v3.memoryleak
         #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v4.latency
         imagePullPolicy: Always
