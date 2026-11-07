@@ -27,7 +27,8 @@ spec:
             # Required: Pod selectors for agent to fetch logs
             stableLabel: role=stable
             canaryLabel: role=canary
-            # Optional: Create GitHub issues on failures
+            # Optional: repository URL forwarded to the remediation agent,
+            # which opens a PR for a code bug or an issue for an operational problem
             githubUrl: https://github.com/kdubois/argo-rollouts-aiops-dashboard
             baseBranch: main
             # Optional: Additional context for AI analysis

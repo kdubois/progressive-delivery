@@ -20,7 +20,7 @@ bootstrap/
 
 components/
   applicationsets/
-    system-appset.yaml               # Deploys: Argo Rollouts controller, kubernetes-agent
+    system-appset.yaml               # Deploys: Argo Rollouts controller, kubernetes-agent, remediation-agent
     workloads-appset.yaml            # Deploys: quarkus-rollouts-demo, canary-app
   appprojects/                       # AppProject RBAC and sync policies
 
@@ -30,8 +30,13 @@ system/
     deployment.yaml                  # Quarkus agent (512Mi–2Gi)
     configmap.yaml                   # AI model endpoint and provider config
     secret.yaml.template             # Credentials template — NOT managed by GitOps
-    rbac.yaml                        # ClusterRole: read pods/logs/events/rollouts; Role: read own secret
+    rbac.yaml                        # ClusterRole: read pods/logs/events/rollouts; Role: read own secret, pause rollouts
     service.yaml                     # ClusterIP :8080
+  remediation-agent/
+    remediation-agent.yaml           # A2A remediation service
+    sandbox-namespace.yaml           # Namespace and SCC for sandbox pods
+    vault-secrets.yaml               # GitHub token and model key from Vault
+  agent-sandbox/                     # Sandboxed containers operator subscription
   vault-server/
     vault-helm-app.yaml              # ArgoCD Application — deploys Vault via Helm chart (dev mode)
   vault-secrets-operator/
@@ -43,7 +48,7 @@ system/
 
 workloads/
   quarkus-rollouts-demo/
-    base/                            # Rollout, AnalysisTemplate, services, Gateway route
+    base/                            # Rollout, AnalysisTemplate, services, OpenShift Route
     overlays/
       scenario-1-stable/             # Happy path image
       scenario-2-null-pointer/       # NPE bug image
@@ -56,7 +61,7 @@ workloads/
 
 | Namespace | Contents |
 |---|---|
-| `openshift-gitops` | Argo CD, Argo Rollouts controller + plugin, kubernetes-agent |
+| `openshift-gitops` | Argo CD, Argo Rollouts controller + plugin, kubernetes-agent, remediation-agent |
 | `quarkus-demo` | Demo application pods (stable + canary) |
 
 ## Initial Deployment
@@ -97,16 +102,18 @@ For urgent fixes during a demo, you can force a pod restart after the image is a
 
 ```bash
 kubectl rollout restart deployment/kubernetes-agent -n openshift-gitops
-kubectl rollout restart deployment/quarkus-rollouts-demo -n quarkus-demo
+kubectl rollout restart deployment/remediation-agent -n openshift-gitops
 ```
 
 ## Switching Demo Scenarios
 
-Update the image tag in the desired overlay's `kustomization.yaml`, then push:
+Update the image line in the base rollout manifest, then push. The ApplicationSet
+deploys `workloads/quarkus-rollouts-demo/` directly; the overlays are not
+synced, so editing an overlay does nothing.
 
 ```bash
-# workloads/quarkus-rollouts-demo/overlays/scenario-2-null-pointer/kustomization.yaml
-# Change newTag to the target scenario image tag, commit, push
+# workloads/quarkus-rollouts-demo/base/rollout.yaml
+# Comment the active image line, uncomment the scenario you want, commit, push
 ```
 
 ## Verifying the Stack
@@ -121,10 +128,13 @@ kubectl get analysisrun -n quarkus-demo
 ## Monitoring a Rollout
 
 ```bash
-oc argo rollouts get rollout quarkus-rollouts-demo -n quarkus-demo --watch
+oc argo rollouts get rollout quarkus-demo -n quarkus-demo --watch
 
 # Agent logs (AI analysis + remediation)
 kubectl logs -f deployment/kubernetes-agent -n openshift-gitops
+
+# Remediation logs
+kubectl logs -f deployment/remediation-agent -n openshift-gitops
 
 # Plugin logs (inside the Argo Rollouts controller)
 kubectl logs -f deployment/argo-rollouts -n openshift-gitops | grep -E "metric-ai|analysis"
