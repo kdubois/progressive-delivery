@@ -1,19 +1,21 @@
 # Progressive Delivery with Argo Rollouts and AI-Powered Analysis
 
-This repository demonstrates progressive delivery with Argo CD and Argo Rollouts with an AI-powered metrics plugin for automated canary analysis. The setup includes a complete GitOps workflow on OpenShift with OpenShift GitOps, OpenShift Routes for traffic management, and an autonomous Kubernetes agent that analyzes deployments using AI.
+This repository demonstrates progressive delivery with Argo CD and Argo Rollouts with an AI-powered metrics plugin for automated canary analysis. The setup includes a complete GitOps workflow on OpenShift with OpenShift GitOps, OpenShift Routes for traffic management, and an autonomous Kubernetes agent that analyzes deployments using AI and delegates fixes to a sandboxed remediation agent.
 
 > **Not on OpenShift?** See [Running on vanilla Kubernetes](#running-on-vanilla-kubernetes) at the bottom of this page.
 
 ## Overview
 
-The AI metrics plugin integrates with Argo Rollouts to provide intelligent canary analysis. During rollouts, an autonomous agent fetches logs from stable and canary pods, analyzes them using AI models (Gemini or OpenAI), and decides whether to promote or abort the deployment. When issues are detected, the agent can automatically create GitHub issues with detailed diagnostics.
+The AI metrics plugin integrates with Argo Rollouts to provide intelligent canary analysis. During rollouts, an autonomous agent fetches logs and metrics for the stable and canary pods, analyzes them with an OpenAI-compatible model, and decides whether to promote or abort the deployment. A separate grading step checks the conclusion against the evidence; a contradicted promote decision escalates to the second opinion model and, if it still disagrees, pauses the rollout for a human. On a rollback the agent delegates to the remediation agent, which opens a GitHub pull request for a patchable code bug or an issue for an operational problem.
 
 ```
 Argo Rollouts (with AI plugin)
-    ↓ (A2A protocol)
+    ↓ (HTTP: selectors + context)
 Kubernetes Agent (Quarkus + LangChain4j)
-    ↓ (fetches logs via Kubernetes API)
+    ↓ (fetches logs and metrics via the Kubernetes API)
 Application Pods (stable + canary)
+    ↓ (rollback, async A2A)
+Remediation Agent → GitHub PR or issue
 ```
 
 ![Full architecture](full-architecture.png)
@@ -66,10 +68,11 @@ The bootstrap script deploys the full stack and then optionally configures a Has
 
 Flow of the script:
 1. Prompt for your AI API key and GitHub token
-2. Install the OpenShift GitOps and Vault operators (default overlay only)
-3. Wait for the Argo CD CRDs to be established
-4. Apply the Argo CD instance, AppProjects, and ApplicationSets
-5. (Optionally) Wait for Vault to be ready, then write your credentials and configure Kubernetes auth
+2. Read the optional `TYPESAFE_API_KEY`, `ANALYSIS_SECOND_OPINION_API_KEY`, and `LLM_API_KEY` from the environment
+3. Install the OpenShift GitOps and Vault operators (default overlay only)
+4. Wait for the Argo CD CRDs to be established
+5. Apply the Argo CD instance, AppProjects, and ApplicationSets
+6. (Optionally) Wait for Vault to be ready, then write your credentials and configure Kubernetes auth
 
 After it completes, Argo CD syncs the rest of the stack: Argo Rollouts, the AI plugin, the Kubernetes agent, and the sample application.
 
@@ -77,8 +80,9 @@ After it completes, Argo CD syncs the rest of the stack: Argo Rollouts, the AI p
 
 - (Optional) HashiCorp Vault + Vault Secrets Operator — syncs credentials to a K8s Secret
 - Argo Rollouts with the AI metrics plugin
-- Kubernetes agent for AI-powered canary analysis
-- Sample (Quarkus-based) application with canary rollout configuration
+- Kubernetes agent for AI-powered canary analysis, with the decision-model grader and second opinion escalation
+- Remediation agent for sandboxed, test-verified fix PRs and issues
+- Sample (Quarkus-based) application with canary rollout configuration and the demo dashboard
 
 #### Managing secrets without Vault
 
@@ -100,10 +104,12 @@ The template expects:
 
 ```yaml
 stringData:
-  analysis_api_key: sk-...            # required - cheap analysis tier (Qwen)
-  analysis_strong_api_key: ...        # optional - escalation tier (DeepSeek)
-  typesafe_api_key: ...               # optional - Jev key for the grader
+  analysis_api_key: sk-...                    # required - analysis tier
+  analysis_second_opinion_api_key: ...        # optional - escalation tier
+  typesafe_api_key: ...                       # optional - decision-model key for the grader
 ```
+
+The remediation agent reads its own secret (`remediation-agent`) with `github_token` and `llm_api_key`. With `--skip-vault`, create that secret too; see `system/remediation-agent/vault-secrets.yaml` for the expected keys.
 
 > `secret.yaml` is git-ignored and never managed by GitOps.
 
@@ -164,21 +170,27 @@ You should see the sample Quarkus application dashboard showing the current depl
 
 Edit the image tag in [`workloads/quarkus-rollouts-demo/base/rollout.yaml`](workloads/quarkus-rollouts-demo/base/rollout.yaml), commit, and push. Argo CD detects the change and starts the rollout.
 
-e.g. 
-```shell
-# Example: change from version 1.0.0 to 1.0.1
-sed -i 's/main/v1.stable/g' workloads/quarkus-rollouts-demo/base/rollout.yaml
+The base manifest keeps one image line active and the other scenario tags commented. To switch, comment the current line and uncomment the target one:
 
-# Commit and push
+```shell
+# workloads/quarkus-rollouts-demo/base/rollout.yaml
+#image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v1.stable
+image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v2.nullpointer
+```
+
+```shell
 git add .
-git commit -m "Update to stable version"
+git commit -m "demo: run the null pointer scenario"
 git push
+```
+
+Do not use `kubectl set image`: Argo CD reconciles the manifest back.
 
 ```shell
 oc argo rollouts get rollout quarkus-demo -n quarkus-demo --watch
 ```
 
-During the rollout the plugin sends logs, metrics, and rollout status to the agent twice — once early at low canary weight, once later once metrics have accumulated — and each analysis returns a promote or abort decision.
+During the rollout the plugin sends the pod selectors and context to the agent twice — once at 10% weight, once at 60% — and each analysis returns a promote or abort decision. Both measurements must pass before the rollout reaches 100%. Each analysis grades its conclusion with the decision model and can escalate to the second opinion model when the grade is weak.
 
 ```shell
 # List analysis runs
@@ -239,6 +251,8 @@ argoproj-labs/metric-ai:
 ```
 
 The agent patches the Rollout's `spec.paused`, so the rollout holds its current canary weight while a human decides. The measurement itself stays successful — the pause, not an abort, is what holds the rollout. Resume with `oc argo rollouts promote quarkus-demo -n quarkus-demo` or abort manually. The paused rollout name is stored in the measurement's `pausedRollout` metadata field.
+
+The gate uses the effective confidence, not just the model's self-report. After each analysis the decision-model grader checks the conclusion against the evidence: a contradicted promote escalates to the second opinion model, and if the grade stays below the veto bar the rollout is paused. A `neutral` grade (evidence too thin to verify) keeps the self-reported confidence, so an early canary sample does not pause a healthy rollout. The dashboard shows both numbers and the grade in the activity feed.
 
 While the rollout is paused, later measurements do not re-patch it or re-publish the event. If a human promotes and the next analysis is still below the threshold, the rollout is paused again — each measurement applies the gate policy, so promoting is a decision to override the analysis, not a way to dismiss it.
 
@@ -302,7 +316,7 @@ After replacing those resources, all other manifests (RBAC, the agent deployment
 
 ## Additional resources
 
-- [Argo Rollouts plugin README](https://github.com/argoproj-labs/rollouts-plugin-metric-ai)
+- [Argo Rollouts plugin README](https://github.com/kdubois/rollouts-plugin-metric-ai)
 - [Kubernetes agent README](https://github.com/kdubois/kubernetes-aiops-agent)
 - [Argo Rollouts documentation](https://argoproj.github.io/argo-rollouts/)
 - [OpenShift GitOps documentation](https://docs.openshift.com/gitops/)

@@ -74,7 +74,7 @@ public class bootstrap implements Callable<Integer> {
         String analysisApiKey = null;
         String githubToken = null;
         String typesafeApiKey = null;
-        String analysisStrongApiKey = null;
+        String analysisSecondOpinionApiKey = null;
         String llmApiKey = null;
 
         if (runVault) {
@@ -87,8 +87,8 @@ public class bootstrap implements Callable<Integer> {
             System.out.println();
             System.out.println("  Optional, read from the environment without prompting (empty disables");
             System.out.println("  the feature):");
-            System.out.println("  - TYPESAFE_API_KEY - Jev key for the analysis grader");
-            System.out.println("  - ANALYSIS_STRONG_API_KEY - key for the strong-model escalation tier");
+            System.out.println("  - TYPESAFE_API_KEY - decision-model key for the analysis grader");
+            System.out.println("  - ANALYSIS_SECOND_OPINION_API_KEY - key for the second opinion escalation tier");
             System.out.println("  - LLM_API_KEY - LLM key for the remediation sandbox (llm_api_key)");
             System.out.println();
 
@@ -104,7 +104,7 @@ public class bootstrap implements Callable<Integer> {
                 return 1;
             }
             typesafeApiKey = System.getenv().getOrDefault("TYPESAFE_API_KEY", "");
-            analysisStrongApiKey = System.getenv().getOrDefault("ANALYSIS_STRONG_API_KEY", "");
+            analysisSecondOpinionApiKey = System.getenv().getOrDefault("ANALYSIS_SECOND_OPINION_API_KEY", "");
             llmApiKey = System.getenv().getOrDefault("LLM_API_KEY", "");
             System.out.println();
         }
@@ -151,7 +151,7 @@ public class bootstrap implements Callable<Integer> {
         }
 
         printHeader("Vault bootstrap");
-        vaultBootstrap(analysisApiKey, githubToken, typesafeApiKey, analysisStrongApiKey, llmApiKey);
+        vaultBootstrap(analysisApiKey, githubToken, typesafeApiKey, analysisSecondOpinionApiKey, llmApiKey);
 
         return 0;
     }
@@ -240,7 +240,7 @@ public class bootstrap implements Callable<Integer> {
     // ── Vault bootstrap ──────────────────────────────────────────────────────
 
     private void vaultBootstrap(String analysisApiKey, String githubToken, String typesafeApiKey,
-            String analysisStrongApiKey, String llmApiKey) throws Exception {
+            String analysisSecondOpinionApiKey, String llmApiKey) throws Exception {
         String namespace = System.getenv().getOrDefault("NAMESPACE", "openshift-gitops");
         int vaultPort = Integer.parseInt(System.getenv().getOrDefault("VAULT_PORT", "8200"));
         String vaultAddr = "http://127.0.0.1:" + vaultPort;
@@ -277,8 +277,8 @@ public class bootstrap implements Callable<Integer> {
             // replaces the whole secret on sync, so every key must be present here.
             // Empty values disable the optional features (grader, escalation).
             String agentPayload = String.format(
-                "{\"data\":{\"analysis_api_key\":\"%s\",\"typesafe_api_key\":\"%s\",\"analysis_strong_api_key\":\"%s\"}}",
-                analysisApiKey, typesafeApiKey, analysisStrongApiKey);
+                "{\"data\":{\"analysis_api_key\":\"%s\",\"typesafe_api_key\":\"%s\",\"analysis_second_opinion_api_key\":\"%s\"}}",
+                analysisApiKey, typesafeApiKey, analysisSecondOpinionApiKey);
             vaultPost(vaultAddr, "secret/data/argo-rollouts/kubernetes-agent", agentPayload, false);
 
             printStep("Writing remediation credentials to Vault KV...");
