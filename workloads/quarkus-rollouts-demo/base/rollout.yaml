@@ -27,7 +27,7 @@ spec:
         #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v2.nullpointer
         #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v3.memoryleak
         #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v4.latency
-        image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:stable-9afd58f31a299561b5a9c604c4e7bed6428adf04
+        image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:stable-bcdf5650ea477e8996b269ed55f28fc3d997d230
         imagePullPolicy: Always
         ports:
         - name: http
