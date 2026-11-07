@@ -21,7 +21,7 @@ spec:
         # Demo scenario images — swap which line is active to canary that scenario.
         # v1–v4 are rebuilt from the demo repo's main on every push.
         #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:main
-        image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v1.stable
+        image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:stable-5f1b7e847a5c093d52417728239d06b0534e6bf8
         #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v2.nullpointer
         #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v3.memoryleak
         #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v4.latency
