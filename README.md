@@ -320,3 +320,5 @@ After replacing those resources, all other manifests (RBAC, the agent deployment
 - [Kubernetes agent README](https://github.com/kdubois/kubernetes-aiops-agent)
 - [Argo Rollouts documentation](https://argoproj.github.io/argo-rollouts/)
 - [OpenShift GitOps documentation](https://docs.openshift.com/gitops/)
+
+<!-- sync-timing-test: 20:38:31Z -->
