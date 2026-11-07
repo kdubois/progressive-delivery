@@ -130,10 +130,12 @@ ANALYSIS_API_KEY=sk-... GITHUB_TOKEN=ghp_... ./bootstrap/bootstrap.java
 ### Argo CD sync tuning (bootstrap)
 
 The bootstrap also tunes Argo CD sync latency for live demos: the git poll
-interval drops to 15s, and a GitHub webhook on this repository triggers
-instant syncs on push. Both are per-cluster state, created by the bootstrap —
-a new cluster gets them automatically. Set `GITHUB_REPO` when bootstrapping
-a fork.
+interval drops to 15s (the application controller restarts to pick it up),
+and a GitHub webhook on this repository triggers instant syncs on push. Both
+are per-cluster state. The bootstrap repoints an existing webhook at the new
+cluster rather than leaving it on a dead route — clusters here are
+short-lived, and a stale webhook still looks healthy in the GitHub settings
+while its deliveries fail. Set `GITHUB_REPO` when bootstrapping a fork.
 
 ### 3. Verify the deployment
 
@@ -321,4 +323,3 @@ After replacing those resources, all other manifests (RBAC, the agent deployment
 - [Argo Rollouts documentation](https://argoproj.github.io/argo-rollouts/)
 - [OpenShift GitOps documentation](https://docs.openshift.com/gitops/)
 
-<!-- sync-timing-test: 20:38:31Z -->
