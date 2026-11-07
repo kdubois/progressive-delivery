@@ -20,11 +20,14 @@ spec:
       - name: quarkus-demo
         # Demo scenario images — swap which line is active to canary that scenario.
         # v1–v4 are rebuilt from the demo repo's main on every push.
+        # The active line below is the deployed build: CI's manifest PR swaps it
+        # on every demo-repo merge and returns any active scenario to this menu.
         #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:main
         #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v1.stable
-        image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:stable-3c588dac83ebc5fece3d3a63451539e4b8ae6266
+        #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v2.nullpointer
         #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v3.memoryleak
         #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v4.latency
+        image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:stable-3c588dac83ebc5fece3d3a63451539e4b8ae6266
         imagePullPolicy: Always
         ports:
         - name: http
