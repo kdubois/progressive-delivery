@@ -18,6 +18,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Command(
     name = "bootstrap",
@@ -163,6 +165,12 @@ public class bootstrap implements Callable<Integer> {
      * a short git poll interval, and a GitHub webhook so pushes to this repo
      * trigger a sync immediately. Both are per-cluster state, so they are set
      * here rather than in the repo.
+     *
+     * <p>The webhook is repointed, not just created: these clusters are
+     * short-lived, and the webhook left behind by a previous cluster keeps
+     * pointing at its dead route while still looking healthy in the GitHub
+     * repo settings. Creating a new one would not fix that, so an existing
+     * hook is updated to this cluster's route and secret.
      */
     private void argocdTuning(String githubToken) throws Exception {
         String namespace = System.getenv().getOrDefault("NAMESPACE", "openshift-gitops");
@@ -170,13 +178,14 @@ public class bootstrap implements Callable<Integer> {
         printStep("Setting Argo CD git poll interval to 15s...");
         exec("oc", "patch", "configmap", "argocd-cm", "-n", namespace,
             "-p", "{\"data\":{\"timeout.reconciliation\":\"15s\"}}");
+        restartApplicationController(namespace);
 
         if (githubToken == null || githubToken.isBlank()) {
             printWarning("No GitHub token available, skipping the webhook (poll-only syncs).");
             return;
         }
 
-        printStep("Creating GitHub webhook for instant syncs...");
+        printStep("Configuring the GitHub webhook for instant syncs...");
         String route = execForOutput("oc", "get", "route", "openshift-gitops-server", "-n", namespace,
             "-o", "jsonpath={.spec.host}");
         if (route == null || route.isBlank()) {
@@ -192,15 +201,55 @@ public class bootstrap implements Callable<Integer> {
             + "\"config\":{\"url\":\"https://%s/api/webhook\",\"content_type\":\"json\",\"secret\":\"%s\"}}",
             route.trim(), secret.trim());
         try {
-            githubPost(githubToken, "repos/" + githubRepo() + "/hooks", payload);
-            printSuccess("Webhook created: pushes to " + githubRepo() + " sync Argo CD instantly.");
+            long hookId = findWebhookId(githubGet(githubToken, "repos/" + githubRepo() + "/hooks"));
+            if (hookId > 0) {
+                githubPatch(githubToken, "repos/" + githubRepo() + "/hooks/" + hookId, payload);
+                printSuccess("Webhook repointed at this cluster: pushes to " + githubRepo() + " sync Argo CD instantly.");
+            } else {
+                githubPost(githubToken, "repos/" + githubRepo() + "/hooks", payload);
+                printSuccess("Webhook created: pushes to " + githubRepo() + " sync Argo CD instantly.");
+            }
         } catch (Exception e) {
             // the webhook is an optimization over the git poll interval; a token
             // without webhook scope (e.g. a fine-grained PAT) must not block the
             // rest of the bootstrap
-            printWarning("GitHub webhook not created (" + e.getMessage() + "). "
+            printWarning("GitHub webhook not configured (" + e.getMessage() + "). "
                 + "Syncs fall back to the git poll interval.");
         }
+    }
+
+    /**
+     * The application controller reads the reconciliation timeout at startup.
+     * On a re-run over a live cluster it must be restarted to pick the 15s
+     * interval up; on a fresh cluster it has not started yet and reads the
+     * patched value on first boot, so a missing controller is not an error.
+     */
+    private void restartApplicationController(String namespace) {
+        try {
+            String controller = execForOutput("oc", "get", "statefulset",
+                "-l", "app.kubernetes.io/component=application-controller",
+                "-o", "name", "-n", namespace);
+            if (controller == null || controller.isBlank()) {
+                System.out.println("  Controller not started yet — it will read the interval at first boot.");
+                return;
+            }
+            exec("oc", "rollout", "restart", "statefulset",
+                "-l", "app.kubernetes.io/component=application-controller", "-n", namespace);
+        } catch (Exception e) {
+            printWarning("Could not restart the application controller (" + e.getMessage()
+                + "). The 15s interval applies after its next restart.");
+        }
+    }
+
+    /**
+     * The id of the first webhook whose URL targets an Argo CD
+     * {@code /api/webhook} endpoint — typically the hook a previous
+     * cluster's bootstrap registered — or 0 when none exists.
+     */
+    private long findWebhookId(String hooksJson) {
+        Matcher m = Pattern.compile("\"id\":(\\d+)[^}]*?\"config\":\\{[^}]*?\"url\":\"[^\"]*/api/webhook\"")
+            .matcher(hooksJson);
+        return m.find() ? Long.parseLong(m.group(1)) : 0;
     }
 
     private String githubRepo() {
@@ -221,20 +270,36 @@ public class bootstrap implements Callable<Integer> {
         return output;
     }
 
-    private void githubPost(String token, String path, String body) throws Exception {
+    private String githubSend(String method, String token, String path, String body) throws Exception {
         HttpClient client = HttpClient.newHttpClient();
-        HttpRequest req = HttpRequest.newBuilder()
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
             .uri(URI.create("https://api.github.com/" + path))
             .header("Authorization", "Bearer " + token)
-            .header("Accept", "application/vnd.github+json")
-            .header("Content-Type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(body))
-            .build();
-        HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
-        // 201 = created; 422 = webhook with this URL already exists
-        if (resp.statusCode() != 201 && resp.statusCode() != 422) {
-            throw new RuntimeException("GitHub webhook POST failed: " + resp.statusCode() + " " + resp.body());
+            .header("Accept", "application/vnd.github+json");
+        if (body == null) {
+            builder.method(method, HttpRequest.BodyPublishers.noBody());
+        } else {
+            builder.header("Content-Type", "application/json")
+                .method(method, HttpRequest.BodyPublishers.ofString(body));
         }
+        HttpResponse<String> resp = client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+        if (resp.statusCode() / 100 != 2) {
+            throw new RuntimeException("GitHub " + method + " " + path + " failed: "
+                + resp.statusCode() + " " + resp.body());
+        }
+        return resp.body();
+    }
+
+    private String githubGet(String token, String path) throws Exception {
+        return githubSend("GET", token, path, null);
+    }
+
+    private void githubPatch(String token, String path, String body) throws Exception {
+        githubSend("PATCH", token, path, body);
+    }
+
+    private void githubPost(String token, String path, String body) throws Exception {
+        githubSend("POST", token, path, body);
     }
 
     // ── Vault bootstrap ──────────────────────────────────────────────────────

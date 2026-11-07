@@ -116,6 +116,38 @@ synced, so editing an overlay does nothing.
 # Comment the active image line, uncomment the scenario you want, commit, push
 ```
 
+## Fast Sync Tuning (per-cluster state)
+
+Argo CD learns about new commits from its git poll or from the GitHub webhook
+the bootstrap configures. Both live on the cluster, not in Git:
+
+- `timeout.reconciliation: 15s` in the `argocd-cm` ConfigMap (default: 3 min).
+  The application controller reads it at startup — restart
+  `statefulset/openshift-gitops-application-controller` after changing it.
+- A GitHub webhook on this repository pointing at
+  `https://<openshift-gitops-server-route>/api/webhook`, with its secret
+  matching `webhook.github.secret` in the `argocd-secret` Secret.
+
+These clusters are short-lived. When a new cluster replaces an old one, the
+webhook still points at the dead cluster's route and its deliveries fail while
+the hook keeps looking healthy in the GitHub settings — re-run the bootstrap
+to repoint it. Manual repair:
+
+```bash
+# poll interval
+oc patch cm argocd-cm -n openshift-gitops -p '{"data":{"timeout.reconciliation":"15s"}}'
+oc rollout restart statefulset/openshift-gitops-application-controller -n openshift-gitops
+
+# webhook (find the id first: gh api repos/kdubois/progressive-delivery/hooks)
+SECRET=$(oc get secret argocd-secret -n openshift-gitops -o jsonpath='{.data.webhook\.github\.secret}' | base64 -d)
+ROUTE=$(oc get route openshift-gitops-server -n openshift-gitops -o jsonpath='{.spec.host}')
+gh api -X PATCH repos/kdubois/progressive-delivery/hooks/<id> \
+  -f "config[url]=https://${ROUTE}/api/webhook" -f "config[secret]=${SECRET}"
+```
+
+Verify deliveries with `gh api repos/kdubois/progressive-delivery/hooks/<id>/deliveries`
+(`status_code` 200 and `status` OK).
+
 ## Verifying the Stack
 
 ```bash
