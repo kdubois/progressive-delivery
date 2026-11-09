@@ -23,10 +23,10 @@ spec:
         # The active line below is the deployed build: CI's manifest PR swaps it
         # on every demo-repo merge and returns any active scenario to this menu.
         #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:main
-        #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v1.stable
+        image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v1.stable
         #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v2.nullpointer
         #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v3.memoryleak
-        image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v4.latency
+        #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:v4.latency
         #image: ghcr.io/kdubois/argo-rollouts-quarkus-demo:stable-615af587cd71bae5ab1db544dc12056a903af96b
         imagePullPolicy: Always
         ports:
