@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# The wind-turbine race game and its agent mesh. The manifests live with the code in the
+# game's own repository (deploy/); this directory is only the pointer, and a new overlay
+# needs no edit here.
+#
+# Points at the test overlay (scratch namespace wind-turbine-gitops) and the gitops-deploy
+# branch while the migration runs step by step; step 9 of the game repo's plan switches it
+# to deploy/overlays/openshift-cluster on main and takes over the live namespace. Until
+# then the game repo's deploy script stays the source of the live cluster.
+resources:
+- https://github.com/kdubois/quinoa-wind-turbine/deploy/overlays/test?ref=gitops-deploy
