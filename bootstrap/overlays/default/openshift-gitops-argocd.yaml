@@ -99,72 +99,64 @@ spec:
   resourceHealthChecks:
   - group: kafka.strimzi.io
     kind: Kafka
-    check:
-      lua:
-        luaCfg: |
-          hs = {}
-          if obj.status ~= nil and obj.status.conditions ~= nil then
-            for _, c in ipairs(obj.status.conditions) do
-              if c.type == "Ready" then
-                hs.status = c.status == "True" and "Healthy" or (c.status == "False" and "Degraded" or "Progressing")
-                hs.message = c.message
-                return hs
-              end
-            end
+    check: |
+      hs = {}
+      if obj.status ~= nil and obj.status.conditions ~= nil then
+        for _, c in ipairs(obj.status.conditions) do
+          if c.type == "Ready" then
+            hs.status = c.status == "True" and "Healthy" or (c.status == "False" and "Degraded" or "Progressing")
+            hs.message = c.message
+            return hs
           end
-          hs.status = "Progressing"
-          return hs
+        end
+      end
+      hs.status = "Progressing"
+      return hs
   - group: kafka.strimzi.io
     kind: KafkaNodePool
-    check:
-      lua:
-        luaCfg: |
-          hs = {}
-          if obj.status ~= nil and obj.status.conditions ~= nil then
-            for _, c in ipairs(obj.status.conditions) do
-              if c.type == "Ready" then
-                hs.status = c.status == "True" and "Healthy" or (c.status == "False" and "Degraded" or "Progressing")
-                hs.message = c.message
-                return hs
-              end
-            end
+    check: |
+      hs = {}
+      if obj.status ~= nil and obj.status.conditions ~= nil then
+        for _, c in ipairs(obj.status.conditions) do
+          if c.type == "Ready" then
+            hs.status = c.status == "True" and "Healthy" or (c.status == "False" and "Degraded" or "Progressing")
+            hs.message = c.message
+            return hs
           end
-          hs.status = "Progressing"
-          return hs
+        end
+      end
+      hs.status = "Progressing"
+      return hs
   - group: kafka.strimzi.io
     kind: KafkaTopic
-    check:
-      lua:
-        luaCfg: |
-          hs = {}
-          if obj.status ~= nil and obj.status.conditions ~= nil then
-            for _, c in ipairs(obj.status.conditions) do
-              if c.type == "Ready" then
-                hs.status = c.status == "True" and "Healthy" or (c.status == "False" and "Degraded" or "Progressing")
-                hs.message = c.message
-                return hs
-              end
-            end
+    check: |
+      hs = {}
+      if obj.status ~= nil and obj.status.conditions ~= nil then
+        for _, c in ipairs(obj.status.conditions) do
+          if c.type == "Ready" then
+            hs.status = c.status == "True" and "Healthy" or (c.status == "False" and "Degraded" or "Progressing")
+            hs.message = c.message
+            return hs
           end
-          hs.status = "Progressing"
-          return hs
+        end
+      end
+      hs.status = "Progressing"
+      return hs
   - group: infinispan.org
     kind: Infinispan
-    check:
-      lua:
-        luaCfg: |
-          hs = {}
-          if obj.status ~= nil and obj.status.conditions ~= nil then
-            for _, c in ipairs(obj.status.conditions) do
-              if c.type == "wellFormed" then
-                hs.status = c.status == "True" and "Healthy" or (c.status == "False" and "Degraded" or "Progressing")
-                hs.message = c.message
-                return hs
-              end
-            end
+    check: |
+      hs = {}
+      if obj.status ~= nil and obj.status.conditions ~= nil then
+        for _, c in ipairs(obj.status.conditions) do
+          if c.type == "wellFormed" then
+            hs.status = c.status == "True" and "Healthy" or (c.status == "False" and "Degraded" or "Progressing")
+            hs.message = c.message
+            return hs
           end
-          hs.status = "Progressing"
-          return hs
+        end
+      end
+      hs.status = "Progressing"
+      return hs
   ha:
     enabled: false
     resources:
