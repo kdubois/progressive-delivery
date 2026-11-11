@@ -5,9 +5,14 @@ kind: Kustomization
 # game's own repository (deploy/); this directory is only the pointer, and a new overlay
 # needs no edit here.
 #
-# Points at the test overlay (scratch namespace wind-turbine-gitops) and the gitops-deploy
-# branch while the migration runs step by step; step 9 of the game repo's plan switches it
-# to deploy/overlays/openshift-cluster on main and takes over the live namespace. Until
-# then the game repo's deploy script stays the source of the live cluster.
+# The remote base is pinned to a commit sha on purpose: Argo CD tracks this repo's
+# revision, so a branch ref on the base would only be re-fetched on a hard refresh. Every
+# change to the game's deploy tree lands as a bump of this sha, the same convention the
+# rollouts apps use for image digests.
+#
+# Points at the test overlay (scratch namespace wind-turbine-gitops) while the migration
+# runs step by step; step 9 of the game repo's plan switches it to
+# deploy/overlays/openshift-cluster on main and takes over the live namespace. Until then
+# the game repo's deploy script stays the source of the live cluster.
 resources:
-- https://github.com/kdubois/quinoa-wind-turbine/deploy/overlays/test?ref=gitops-deploy
+- https://github.com/kdubois/quinoa-wind-turbine/deploy/overlays/test?ref=97cc368
