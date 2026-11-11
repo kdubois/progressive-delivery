@@ -116,11 +116,22 @@ spec:
     kind: KafkaNodePool
     check: |
       hs = {}
-      if obj.status ~= nil and obj.status.conditions ~= nil then
-        for _, c in ipairs(obj.status.conditions) do
-          if c.type == "Ready" then
-            hs.status = c.status == "True" and "Healthy" or (c.status == "False" and "Degraded" or "Progressing")
-            hs.message = c.message
+      if obj.status ~= nil then
+        if obj.status.conditions ~= nil then
+          for _, c in ipairs(obj.status.conditions) do
+            if c.type == "Ready" then
+              hs.status = c.status == "True" and "Healthy" or (c.status == "False" and "Degraded" or "Progressing")
+              hs.message = c.message
+              return hs
+            end
+          end
+        end
+        -- This AMQ Streams version publishes no conditions on the pool: the operator
+        -- assigns a node id per created broker, so a full set of ids is the readiness
+        -- proxy. The Kafka CR reports the brokers' own readiness.
+        if obj.status.nodeIds ~= nil and obj.spec ~= nil and obj.spec.replicas ~= nil then
+          if #obj.status.nodeIds >= obj.spec.replicas then
+            hs.status = "Healthy"
             return hs
           end
         end
@@ -148,7 +159,8 @@ spec:
       hs = {}
       if obj.status ~= nil and obj.status.conditions ~= nil then
         for _, c in ipairs(obj.status.conditions) do
-          if c.type == "wellFormed" then
+          -- The operator writes the condition as WellFormed (capital W).
+          if c.type == "WellFormed" then
             hs.status = c.status == "True" and "Healthy" or (c.status == "False" and "Degraded" or "Progressing")
             hs.message = c.message
             return hs
