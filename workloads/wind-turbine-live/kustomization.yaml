@@ -5,4 +5,4 @@ kind: Kustomization
 # the test pointer, on the overlay that targets wind-turbine itself; the base is pinned to a
 # full commit sha for the same reason documented in ../wind-turbine.
 resources:
-- https://github.com/redhat-developer-demos/quinoa-wind-turbine/deploy/overlays/openshift-cluster?ref=0b28af2c24ddbbf1e9f1d32b83e3a090e0a709f7
+- https://github.com/redhat-developer-demos/quinoa-wind-turbine/deploy/overlays/openshift-cluster?ref=54628bac1fd0c28e73b75d22206739ad96b3421c
