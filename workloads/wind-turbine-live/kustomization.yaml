@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# The live demo namespace (sub-task 8 step 9 of the game repo's plan). Same deploy tree as
+# the test pointer, on the overlay that targets wind-turbine itself; the base is pinned to a
+# full commit sha for the same reason documented in ../wind-turbine.
+resources:
+- https://github.com/redhat-developer-demos/quinoa-wind-turbine/deploy/overlays/openshift-cluster?ref=0b28af2c24ddbbf1e9f1d32b83e3a090e0a709f7
