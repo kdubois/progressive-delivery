@@ -1,8 +1,8 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# The live demo namespace (sub-task 8 step 9 of the game repo's plan). Same deploy tree as
-# the test pointer, on the overlay that targets wind-turbine itself; the base is pinned to a
-# full commit sha for the same reason documented in ../wind-turbine.
+# The live demo namespace (sub-task 8 step 9 of the game repo's plan). It builds the overlay that
+# targets wind-turbine itself; the base is pinned to a full commit sha because Argo CD tracks this
+# repo's revision, so a branch ref on the base would only be re-fetched on a hard refresh.
 resources:
 - https://github.com/redhat-developer-demos/quinoa-wind-turbine/deploy/overlays/openshift-cluster?ref=54628bac1fd0c28e73b75d22206739ad96b3421c
