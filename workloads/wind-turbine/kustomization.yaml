@@ -15,4 +15,4 @@ kind: Kustomization
 # deploy/overlays/openshift-cluster on main and takes over the live namespace. Until then
 # the game repo's deploy script stays the source of the live cluster.
 resources:
-- https://github.com/redhat-developer-demos/quinoa-wind-turbine/deploy/overlays/test?ref=2e5994acf487e3207e3434a0809fe263ecdc11e6
+- https://github.com/redhat-developer-demos/quinoa-wind-turbine/deploy/overlays/test?ref=6ffc8239ac30529967375e2ec609a60126be6a95
