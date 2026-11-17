@@ -105,7 +105,7 @@ The template expects:
 ```yaml
 stringData:
   analysis_api_key: sk-...                    # required - analysis tier
-  analysis_second_opinion_api_key: ...        # optional - escalation tier
+  analysis_second_opinion_api_key: ...        # optional - escalation tier (falls back to the analysis key)
   typesafe_api_key: ...                       # optional - decision-model key for the grader
 ```
 
