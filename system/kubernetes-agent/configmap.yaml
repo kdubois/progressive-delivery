@@ -9,7 +9,7 @@ data:
   ANALYSIS_MODEL: rits/zai-org/glm-5-3
   ANALYSIS_BASE_URL: https://api.enmaas.devshift.net/v1
   # Second-opinion tier for the analysis escalation (open weights, like the cheap tier).
-  # Empty model disables the escalation; the key comes from the secret.
+  # Empty model disables the escalation; the key falls back to the analysis key.
   ANALYSIS_SECOND_OPINION_MODEL: rits/deepseek-ai/DeepSeek-V4.1-Flash-1017
   ANALYSIS_SECOND_OPINION_BASE_URL: https://api.enmaas.devshift.net/v1
   #ANALYSIS_MODEL: gemini-3.5-flash

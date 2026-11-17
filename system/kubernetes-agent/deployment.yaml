@@ -47,8 +47,7 @@ spec:
                   key: typesafe_api_key
                   optional: true
             # Optional: second-opinion key for the analysis escalation. Without it
-            # the escalation tier disables itself and a disputed conclusion
-            # goes straight to the pause gate.
+            # the tier falls back to the analysis key.
             - name: ANALYSIS_SECOND_OPINION_API_KEY
               valueFrom:
                 secretKeyRef:
