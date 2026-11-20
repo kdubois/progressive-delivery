@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1220" viewBox="0 0 1680 1220" role="img" aria-labelledby="title desc">
+<title id="title">AI-assisted progressive delivery with Agent Sandbox remediation</title>
+<desc id="desc">Argo Rollouts calls a stateless plugin and Kubernetes analysis agent synchronously. Rollback decisions delegate asynchronously over A2A to a remediation service, which runs code fixes in an isolated Sandbox, verifies tests, and opens a pull request. Operational problems and unverified fixes create issues.</desc>
+<rect width="1680" height="1220" fill="#0b1220"/>
+<text x="48" y="32" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="700" fill="#eef4ff">Progressive delivery with AI analysis</text>
+<text x="50" y="89" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="400" fill="#b8c7db">Argo CD syncs services, operators, policies, and rollout manifests from Git.</text>
+<text x="50" y="150" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" fill="#67b2ff">SYNCHRONOUS ANALYSIS</text>
+<rect x="50" y="202" width="260" height="300" rx="16" fill="#111e30" stroke="#67b2ff" stroke-width="2"/>
+<text x="72" y="228" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="29" font-weight="700" fill="#eef4ff">Argo Rollouts</text>
+<text x="72" y="279" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="400" fill="#b8c7db">AI metrics plugin</text>
+<text x="72" y="316" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="400" fill="#b8c7db">No LLM in plugin</text>
+<text x="72" y="353" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="400" fill="#b8c7db">POST /analyze</text>
+<text x="72" y="420" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="400" fill="#b8c7db">Selectors + context</text>
+<text x="72" y="457" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="400" fill="#b8c7db">sent to the agent</text>
+<polyline points="310,342 365,342" fill="none" stroke="#67b2ff" stroke-width="3"/>
+<polygon points="365,342 352.0,336.0 352.0,348.0" fill="#67b2ff"/>
+<rect x="365" y="202" width="370" height="300" rx="16" fill="#111e30" stroke="#6dd8b2" stroke-width="2"/>
+<text x="389" y="228" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="29" font-weight="700" fill="#eef4ff">Kubernetes agent</text>
+<text x="389" y="280" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="400" fill="#6dd8b2">Gather evidence in parallel</text>
+<text x="389" y="324" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="400" fill="#b8c7db">Pod logs + diagnostics</text>
+<text x="389" y="361" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="400" fill="#b8c7db">Application metrics</text>
+<text x="389" y="398" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="400" fill="#b8c7db">Rollout status</text>
+<text x="389" y="457" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="400" fill="#6dd8b2">Combine evidence</text>
+<polyline points="735,342 790,342" fill="none" stroke="#6dd8b2" stroke-width="3"/>
+<polygon points="790,342 777.0,336.0 777.0,348.0" fill="#6dd8b2"/>
+<rect x="790" y="202" width="395" height="300" rx="16" fill="#111e30" stroke="#bdabff" stroke-width="2"/>
+<text x="814" y="228" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="29" font-weight="700" fill="#eef4ff">Analyze and grade</text>
+<text x="814" y="280" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="400" fill="#b8c7db">Analysis model decides</text>
+<text x="814" y="317" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="400" fill="#b8c7db">Optional decision-model grader</text>
+<text x="814" y="354" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="400" fill="#b8c7db">Dispute → second opinion</text>
+<text x="814" y="391" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="400" fill="#b8c7db">Re-grade the final conclusion</text>
+<text x="814" y="457" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="400" fill="#bdabff">One second-opinion pass</text>
+<polyline points="1185,342 1240,342" fill="none" stroke="#bdabff" stroke-width="3"/>
+<polygon points="1240,342 1227.0,336.0 1227.0,348.0" fill="#bdabff"/>
+<rect x="1240" y="202" width="390" height="300" rx="16" fill="#111e30" stroke="#67b2ff" stroke-width="2"/>
+<text x="1264" y="228" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="29" font-weight="700" fill="#eef4ff">Return decision</text>
+<text x="1264" y="280" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="400" fill="#b8c7db">Promote or rollback</text>
+<text x="1264" y="317" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="400" fill="#b8c7db">Confidence + root cause</text>
+<text x="1264" y="354" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="400" fill="#b8c7db">Plugin reports to Rollouts</text>
+<text x="1264" y="423" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="400" fill="#b8c7db">Uncertain promote can pause</text>
+<text x="1264" y="460" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="400" fill="#b8c7db">when the pause gate is on.</text>
+<text x="50" y="535" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="400" fill="#b8c7db">The rollout decision returns without waiting for a coding agent or a pull request.</text>
+<polyline points="1435,502 1435,598 220,598 220,706" fill="none" stroke="#ffb66b" stroke-width="3" stroke-dasharray="8 7"/>
+<polygon points="220,706 226.0,693.0 214.0,693.0" fill="#ffb66b"/>
+<rect x="505" y="578" width="750" height="42" rx="0" fill="#0b1220" stroke="#0b1220" stroke-width="2"/>
+<text x="520" y="585" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="400" fill="#ffb66b">Rollback + repository URL → asynchronous A2A delegation</text>
+<text x="455" y="658" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700" fill="#ffb66b">ASYNCHRONOUS REMEDIATION</text>
+<rect x="50" y="706" width="340" height="340" rx="16" fill="#111e30" stroke="#ffb66b" stroke-width="2"/>
+<text x="74" y="733" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" fill="#eef4ff">Remediation service</text>
+<text x="74" y="789" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="400" fill="#b8c7db">Validate repository allow-list</text>
+<text x="74" y="832" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="400" fill="#b8c7db">Create and watch Sandbox</text>
+<text x="74" y="875" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="400" fill="#b8c7db">Read the wrapper result</text>
+<text x="74" y="918" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="400" fill="#b8c7db">Open PR or issue</text>
+<text x="74" y="1001" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="400" fill="#ffb66b">Runs in openshift-gitops</text>
+<polyline points="390,844 455,844" fill="none" stroke="#ffb66b" stroke-width="3" stroke-dasharray="8 7"/>
+<polygon points="455,844 442.0,838.0 442.0,850.0" fill="#ffb66b"/>
+<rect x="455" y="706" width="735" height="340" rx="16" fill="#111e30" stroke="#6dd8b2" stroke-width="2"/>
+<text x="480" y="731" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" fill="#eef4ff">Agent Sandbox · remediation namespace</text>
+<text x="480" y="785" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="400" fill="#b8c7db">1  Clone repository and run coding agent (opencode)</text>
+<text x="480" y="828" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="400" fill="#b8c7db">2  Reject build, CI, and existing-test changes</text>
+<text x="480" y="871" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="400" fill="#b8c7db">3  Run the test suite independently</text>
+<text x="480" y="914" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="400" fill="#b8c7db">4  Push fix branch only when tests pass</text>
+<text x="480" y="985" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="400" fill="#6dd8b2">Read-only root · no SA token · restricted network</text>
+<text x="480" y="1018" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="400" fill="#b8c7db">Agent Sandbox operator · default container runtime</text>
+<polyline points="1190,844 1250,844" fill="none" stroke="#ffb66b" stroke-width="3" stroke-dasharray="8 7"/>
+<polygon points="1250,844 1237.0,838.0 1237.0,850.0" fill="#ffb66b"/>
+<text x="1197" y="815" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="400" fill="#ffb66b">push</text>
+<rect x="1250" y="706" width="380" height="340" rx="16" fill="#111e30" stroke="#ffb66b" stroke-width="2"/>
+<text x="1274" y="733" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="29" font-weight="700" fill="#eef4ff">GitHub</text>
+<text x="1274" y="789" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="400" fill="#b8c7db">Verified fix → pull request</text>
+<text x="1274" y="832" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="400" fill="#b8c7db">Test evidence in PR body</text>
+<text x="1274" y="875" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="400" fill="#b8c7db">Human review and merge</text>
+<text x="1274" y="946" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="400" fill="#b8c7db">Operational / unverified fix</text>
+<text x="1274" y="983" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="400" fill="#b8c7db">→ issue from the service</text>
+<polyline points="220,1046 220,1100 1440,1100 1440,1046" fill="none" stroke="#ffb66b" stroke-width="3" stroke-dasharray="8 7"/>
+<polygon points="1440,1046 1434.0,1059.0 1446.0,1059.0" fill="#ffb66b"/>
+<rect x="480" y="1078" width="700" height="44" rx="0" fill="#0b1220" stroke="#0b1220" stroke-width="2"/>
+<text x="495" y="1086" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="400" fill="#ffb66b">Operational problems skip the sandbox and create an issue.</text>
+<text x="50" y="1165" dominant-baseline="text-before-edge" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="400" fill="#b8c7db">Sandbox infrastructure errors and timeouts are reported as failures. Fixes are never auto-merged.</text>
+</svg>
